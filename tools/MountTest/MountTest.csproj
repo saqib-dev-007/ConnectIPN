@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>ConnectIPN.MountTest</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\windows\ConnectIPN.Desktop\Protocol\Protocol.cs" Link="Shared\Protocol.cs" />
+    <Compile Include="..\..\windows\ConnectIPN.Desktop\Net\RemoteClient.cs" Link="Shared\RemoteClient.cs" />
+    <Compile Include="..\..\windows\ConnectIPN.Desktop\Net\LinkServer.cs" Link="Shared\LinkServer.cs" />
+    <Compile Include="..\..\windows\ConnectIPN.Desktop\Fs\RemoteFileSystem.cs" Link="Shared\RemoteFileSystem.cs" />
+    <Compile Include="..\..\windows\ConnectIPN.Desktop\Fs\DriveMount.cs" Link="Shared\DriveMount.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="winfsp-msil">
+      <HintPath>..\..\windows\vendor\winfsp-msil.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <None Include="..\..\windows\vendor\winfsp-x64.dll" Link="winfsp-x64.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

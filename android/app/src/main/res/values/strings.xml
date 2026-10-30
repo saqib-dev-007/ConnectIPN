@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ConnectIPN</string>
+    <string name="tagline">Phone storage over Wi-Fi</string>
+
+    <string name="status_idle">Not connected</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_error">Link problem</string>
+
+    <string name="detail_idle">Scan the QR code shown in the ConnectIPN desktop app.</string>
+    <string name="detail_connected">Your PC can mount this phone\'s storage as a drive.</string>
+
+    <string name="action_scan">Scan QR code</string>
+    <string name="action_permission">Allow access to all files</string>
+    <string name="action_disconnect">Disconnect</string>
+
+    <string name="how_title">How it works</string>
+    <string name="how_step_1">Open ConnectIPN on your PC and leave it running.</string>
+    <string name="how_step_2">Scan the QR code with this phone.</string>
+    <string name="how_step_3">Pick a drive letter on the PC and mount it.</string>
+
+    <string name="developed_by">Developed by Saqib Mengal</string>
+    <string name="version_label">ConnectIPN 1.0</string>
+
+    <string name="social_instagram">Instagram</string>
+    <string name="social_github">GitHub</string>
+    <string name="social_linkedin">LinkedIn</string>
+    <string name="social_email">Email</string>
+
+    <string name="scan_prompt">Scan the code shown on your PC</string>
+</resources>

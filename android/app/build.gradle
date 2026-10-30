@@ -1,0 +1,76 @@
+plugins {
+    id 'com.android.application'
+}
+
+def appVersion = "1.0"
+def keystoreFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystoreFile.exists()) {
+    keystoreFile.withInputStream { keystoreProps.load(it) }
+}
+
+android {
+    namespace 'com.connectipn'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.connectipn"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName appVersion
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreFile.exists()) {
+                storeFile rootProject.file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Falls back to the debug key so a release APK is still installable
+            // when the local keystore.properties is absent.
+            signingConfig keystoreFile.exists() ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.outputs.each { output ->
+            output.outputFileName.set("ConnectIPN-" + appVersion + ".apk")
+        }
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        // zxing-android-embedded still pulls the pre-1.8 jdk7/jdk8 shims.
+        force 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
+        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'
+        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+}

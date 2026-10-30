@@ -9,6 +9,13 @@
   No cloud, no USB cable, no internet.
 </p>
 
+<p align="center">
+  <a href="https://github.com/saqib-dev-007/ConnectIPN/releases/latest"><img alt="Download" src="https://img.shields.io/badge/download-latest%20release-2ea043?style=flat-square"></a>
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0-3b82f6?style=flat-square">
+  <img alt="Platforms" src="https://img.shields.io/badge/platforms-Windows%20%7C%20Android-8b5cf6?style=flat-square">
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-f59e0b?style=flat-square"></a>
+</p>
+
 ---
 
 ConnectIPN bridges a phone and a PC that are on the same Wi-Fi network. The Windows app
@@ -91,16 +98,27 @@ drives every file operation.
 | Android | Android 8.0 (API 26) or newer, a camera for the QR code, and the same Wi-Fi network as the PC. |
 | Build only | .NET 8 SDK, JDK 17, Android SDK 34 (build-tools 34.0.0). |
 
-The Windows build in `release/` is self-contained, so the target PC does not need .NET
-installed. WinFsp is the only thing that has to be added, and the app detects when it is
-missing and offers a download link.
+The Windows build is self-contained, so the target PC does not need .NET installed. WinFsp
+is the only thing that has to be added, and the app detects when it is missing and offers a
+download link.
 
 ## Install
 
+Everything is on the [latest release](https://github.com/saqib-dev-007/ConnectIPN/releases/latest)
+page:
+
+| Platform | File | Size |
+|---|---|---|
+| **Android 8.0+** | [ConnectIPN-1.0.apk](https://github.com/saqib-dev-007/ConnectIPN/releases/latest/download/ConnectIPN-1.0.apk) | 3.0 MB |
+| **Windows 10 / 11 (x64)** | [ConnectIPN-Setup.exe](https://github.com/saqib-dev-007/ConnectIPN/releases/latest/download/ConnectIPN-Setup.exe) | 125 MB |
+
+Install [WinFsp 2.x](https://winfsp.dev/rel/) before the Windows app — it is the driver that
+makes the drive letter possible, it needs administrator rights once, and it needs a reboot.
+
 ### Windows
 
-Download `ConnectIPN-Setup.exe` from `release/` and run it. The installer is a single
-file and needs no .NET runtime.
+Download `ConnectIPN-Setup.exe` and run it. The installer is a single file and needs no .NET
+runtime.
 
 - choose the install folder (default `%LOCALAPPDATA%\Programs\ConnectIPN`),
 - optionally create a **desktop shortcut**,
@@ -118,11 +136,13 @@ ConnectIPN-Setup.exe --silent D:\Apps\ConnectIPN [/no-desktop] [/no-startup]
 
 Uninstall from **Settings → Apps → ConnectIPN**, or run `ConnectIPN.exe --uninstall`.
 
-A portable build is also in `release\windows\` if you would rather not install anything.
+If you would rather not install anything, publish the app to a folder and run
+`ConnectIPN.exe` from there — see [Building from source](#building-from-source).
 
 ### Android
 
-Install `release/android/ConnectIPN-1.0.apk`:
+Download `ConnectIPN-1.0.apk` on the phone and open it, allowing installs from this source
+when prompted. Or push it over USB:
 
 ```bash
 adb install -r ConnectIPN-1.0.apk

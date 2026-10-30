@@ -377,7 +377,7 @@ Built by **Saqib Mengal**.
 [Instagram](https://www.instagram.com/saqib_mengal_007) ·
 [GitHub](https://github.com/saqib-dev-007) ·
 [LinkedIn](https://www.linkedin.com/in/saqib-mengal-76855b389/) ·
-[saqibmengl7@gmail.com](mailto:saqibmengl7@gmail.com)
+[saqibmengal7@gmail.com](mailto:saqibmengal7@gmail.com)
 
 Thanks to the [WinFsp](https://winfsp.dev/) project for the file-system framework and to
 the [ZXing](https://github.com/journeyapps/zxing-android-embedded) project for the Android

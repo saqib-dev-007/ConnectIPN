@@ -14,7 +14,7 @@ public partial class MainWindow : Window
     private const string LinkInstagram = "https://www.instagram.com/saqib_mengal_007";
     private const string LinkGithub = "https://github.com/saqib-dev-007";
     private const string LinkLinkedin = "https://www.linkedin.com/in/saqib-mengal-76855b389/";
-    private const string LinkEmail = "mailto:saqibmengl7@gmail.com";
+    private const string LinkEmail = "mailto:saqibmengal7@gmail.com";
 
     private readonly ObservableCollection<string> _log = new();
     private readonly LinkSession _session;

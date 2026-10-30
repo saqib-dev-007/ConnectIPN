@@ -116,7 +116,7 @@
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
                         <TextBlock Text="DEVELOPER" FontSize="10" FontWeight="SemiBold" Foreground="#8C95A8" />
                         <TextBlock Text="Saqib Mengal" FontSize="14" FontWeight="SemiBold" Margin="0,4,0,0" />
-                        <TextBlock Text="saqibmengl7@gmail.com" FontSize="11.5" Foreground="#7E8AA0" Margin="0,2,0,0" />
+                        <TextBlock Text="saqibmengal7@gmail.com" FontSize="11.5" Foreground="#7E8AA0" Margin="0,2,0,0" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Style="{StaticResource IconButton}" Click="Instagram_Click" ToolTip="Instagram" Margin="0,0,6,0">

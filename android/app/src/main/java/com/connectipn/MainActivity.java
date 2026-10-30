@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity implements LinkManager.Liste
     private static final String LINK_INSTAGRAM = "https://www.instagram.com/saqib_mengal_007";
     private static final String LINK_GITHUB = "https://github.com/saqib-dev-007";
     private static final String LINK_LINKEDIN = "https://www.linkedin.com/in/saqib-mengal-76855b389/";
-    private static final String LINK_EMAIL = "mailto:saqibmengl7@gmail.com";
+    private static final String LINK_EMAIL = "mailto:saqibmengal7@gmail.com";
 
     private TextView statusText;
     private TextView detailText;

@@ -272,4 +272,4 @@ Open an issue, or reach the author:
 - Instagram — [@saqib_mengal_007](https://www.instagram.com/saqib_mengal_007)
 - GitHub — [@saqib-dev-007](https://github.com/saqib-dev-007)
 - LinkedIn — [Saqib Mengal](https://www.linkedin.com/in/saqib-mengal-76855b389/)
-- Email — [saqibmengl7@gmail.com](mailto:saqibmengl7@gmail.com)
+- Email — [saqibmengal7@gmail.com](mailto:saqibmengal7@gmail.com)

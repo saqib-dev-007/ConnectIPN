@@ -33,6 +33,106 @@ public final class Protocol {
     public static final int OP_STATFS = 0x30;
     public static final int OP_PING = 0x7F;
 
+    /**
+     * Phone -> PC input. Sent as a request frame but never answered: the PC applies
+     * the event and moves on, so a burst of moves costs one write each.
+     * Body is always u8 action, i32 a, i32 b.
+     */
+    public static final int OP_INPUT = 0x40;
+
+    // --- screen mirroring / remote control -------------------------------------
+    // Fire-and-forget request frames (id 0, never answered), same as OP_INPUT.
+
+    /** One encoded screen frame: u8 source, u8 flags, u16 w, u16 h, u32 seq, bytes jpeg. */
+    public static final int OP_SCREEN = 0x50;
+
+    /** u8 mode, u16 w, u16 h, u8 fps, u8 quality, u8 orientation, u8 aspect. */
+    public static final int OP_SCREEN_CONFIG = 0x51;
+
+    /** PC -> phone: u8 action, u8 flags, u16 x1, u16 y1, u16 x2, u16 y2,
+     *  u16 duration, u16 key, u32 extra. */
+    public static final int OP_PHONE_INPUT = 0x52;
+
+    /** PC -> phone keymap layout, string json. */
+    public static final int OP_KEYMAP = 0x53;
+
+    /** Raw PCM audio for the mirrored screen: u8 source, u8 flags, u16 unused,
+     *  u32 seq, u32 length, bytes (s16le, stereo, 48 kHz). */
+    public static final int OP_AUDIO = 0x54;
+
+    /** Phone -> PC capability report: u8 flags, u8 reserved, u16 reserved. */
+    public static final int OP_STATUS = 0x55;
+
+    /** PC -> phone: move the link onto the USB cable. Body: u8 mode, u16 port. */
+    public static final int OP_TRANSPORT = 0x56;
+
+    public static final int TRANSPORT_USB = 1;
+
+    public static final int STATUS_CONTROL = 0x01;
+    public static final int STATUS_OVERLAY = 0x02;
+    public static final int STATUS_AUDIO_CAPABLE = 0x04;
+    public static final int STATUS_AUDIO_RUNNING = 0x08;
+
+    public static final int SCREEN_PHONE = 1;
+    public static final int SCREEN_DESKTOP = 2;
+
+    public static final int SCREEN_START_PHONE = 1;
+    public static final int SCREEN_STOP_PHONE = 2;
+    public static final int SCREEN_START_DESKTOP = 3;
+    public static final int SCREEN_STOP_DESKTOP = 4;
+
+    public static final int PHONE_TAP = 1;
+    public static final int PHONE_SWIPE = 2;
+    public static final int PHONE_LONG_PRESS = 3;
+    public static final int PHONE_KEY = 4;
+
+    public static final int ANDROID_KEY_BACK = 4;
+    public static final int ANDROID_KEY_HOME = 3;
+    public static final int ANDROID_KEY_RECENTS = 187;
+
+    public static final int ORIENT_AUTO = 0;
+    public static final int ORIENT_PORTRAIT = 1;
+    public static final int ORIENT_LANDSCAPE = 2;
+
+    public static final int ASPECT_NATIVE = 0;
+    public static final int ASPECT_16_9 = 1;
+    public static final int ASPECT_4_3 = 2;
+    public static final int ASPECT_FILL = 3;
+
+    public static final int INPUT_MOVE = 1;
+    public static final int INPUT_BUTTON = 2;
+    public static final int INPUT_WHEEL = 3;
+    public static final int INPUT_KEY = 4;
+    public static final int INPUT_PAD_AXIS = 5;
+    public static final int INPUT_PAD_BUTTON = 6;
+    public static final int INPUT_PAD_CONNECT = 7;
+
+    /** Axis ids. Y is positive upwards, matching XInput. */
+    public static final int PAD_LEFT_X = 0;
+    public static final int PAD_LEFT_Y = 1;
+    public static final int PAD_RIGHT_X = 2;
+    public static final int PAD_RIGHT_Y = 3;
+    public static final int PAD_LEFT_TRIGGER = 4;
+    public static final int PAD_RIGHT_TRIGGER = 5;
+
+    /** XInput button masks. */
+    public static final int PAD_A = 0x1000;
+    public static final int PAD_B = 0x2000;
+    public static final int PAD_X = 0x4000;
+    public static final int PAD_Y = 0x8000;
+    public static final int PAD_LB = 0x0100;
+    public static final int PAD_RB = 0x0200;
+    public static final int PAD_BACK = 0x0020;
+    public static final int PAD_START = 0x0010;
+    public static final int PAD_UP = 0x0001;
+    public static final int PAD_DOWN = 0x0002;
+    public static final int PAD_LEFT = 0x0004;
+    public static final int PAD_RIGHT = 0x0008;
+
+    public static final int BUTTON_LEFT = 1;
+    public static final int BUTTON_RIGHT = 2;
+    public static final int BUTTON_MIDDLE = 4;
+
     public static final int ATTR_DIRECTORY = 1;
     public static final int ATTR_READONLY = 2;
 
@@ -131,6 +231,10 @@ public final class Protocol {
 
         public int u32() {
             return buf.getInt();
+        }
+
+        public int u16() {
+            return buf.getShort() & 0xFFFF;
         }
 
         public long u64() {

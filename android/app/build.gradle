@@ -2,7 +2,7 @@ plugins {
     id 'com.android.application'
 }
 
-def appVersion = "1.0"
+def appVersion = "2.0"
 def keystoreFile = rootProject.file("keystore.properties")
 def keystoreProps = new Properties()
 if (keystoreFile.exists()) {
@@ -17,7 +17,7 @@ android {
         applicationId "com.connectipn"
         minSdk 26
         targetSdk 34
-        versionCode 1
+        versionCode 5
         versionName appVersion
     }
 

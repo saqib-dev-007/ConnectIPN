@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 using ConnectIPN.Fs;
+using ConnectIPN.Net;
 using ConnectIPN.Util;
 
 namespace ConnectIPN;
@@ -15,12 +16,15 @@ public partial class MainWindow : Window
     private const string LinkGithub = "https://github.com/saqib-dev-007";
     private const string LinkLinkedin = "https://www.linkedin.com/in/saqib-mengal-76855b389/";
     private const string LinkEmail = "mailto:saqibmengal7@gmail.com";
+    private const string LinkPatreon = "https://www.patreon.com/cw/SaqibMengal";
 
     private readonly ObservableCollection<string> _log = new();
     private readonly LinkSession _session;
     private string? _qrPayload;
     private bool _allowClose;
     private bool _initialized;
+    private ScreenWindow? _screen;
+    private KeymapWindow? _keymap;
 
     public MainWindow(LinkSession session)
     {
@@ -36,6 +40,7 @@ public partial class MainWindow : Window
 
         _session.Changed += OnSessionChanged;
         _session.Logged += Log;
+        _session.PhoneMirrorChanged += OnPhoneMirrorChanged;
     }
 
     /// <summary>Set by the tray menu; a normal close only hides the window.</summary>
@@ -86,14 +91,16 @@ public partial class MainWindow : Window
         RefreshDriveLetters();
 
         RemoteFileSystem.Trace = message => Log("drive: " + message);
+        InputInjector.Trace = message => Log("input: " + message);
+        GamepadHost.Trace = message => Log("pad: " + message);
 
-        WinFspBanner.Visibility = WinFspEnvironment.IsInstalled ? Visibility.Collapsed : Visibility.Visible;
-        if (!WinFspEnvironment.IsInstalled)
-        {
-            Log("WinFsp was not found. Install it to mount a drive.");
-        }
-
+        RefreshDrivers();
         Refresh();
+
+        AnimateIn(LinkCard, 40);
+        AnimateIn(CommandsCard, 130);
+        AnimateIn(DriversCard, 220);
+        AnimateIn(LogCard, 310);
     }
 
     private void OnSessionChanged() => Refresh();
@@ -107,9 +114,9 @@ public partial class MainWindow : Window
 
         (string status, string color) = _session.State switch
         {
-            LinkState.Connected => ($"Connected to {_session.DeviceName}", "#22C55E"),
-            LinkState.Error => (_session.StatusMessage, "#EF4444"),
-            _ => ("Waiting for phone…", "#F59E0B"),
+            LinkState.Connected => ($"Connected to {_session.DeviceName}", "#34D399"),
+            LinkState.Error => (_session.StatusMessage, "#F87171"),
+            _ => ("Waiting for phone…", "#FBBF24"),
         };
         SetStatus(status, color);
 
@@ -135,6 +142,20 @@ public partial class MainWindow : Window
             }
         }
 
+        PhoneScreenButton.IsEnabled = _session.IsConnected;
+        ScreenHint.Text = !_session.IsConnected
+            ? "Connect your phone to mirror screens."
+            : _session.IsPhoneMirroring
+                ? (_session.IsPhoneAudioPlaying
+                    ? "Mirroring with sound. Click the picture to control the phone."
+                    : "Mirroring. Click the picture to control the phone.")
+                : "Open Screen on the phone and tap Start mirroring, or send this PC's screen to it.";
+
+        UsbPanel.Visibility = _session.IsUsbAvailable ? Visibility.Visible : Visibility.Collapsed;
+        UsbButton.Content = _session.IsUsbLink ? "USB connected" : "Connect via USB";
+        UsbButton.IsEnabled = !_session.IsUsbLink;
+        UsbHint.Text = _session.UsbStatus;
+
         MountButton.IsEnabled = _session.IsConnected && !_session.IsMounted && WinFspEnvironment.IsInstalled;
         UnmountButton.IsEnabled = _session.IsMounted;
         OpenButton.IsEnabled = _session.IsMounted;
@@ -149,7 +170,76 @@ public partial class MainWindow : Window
     private void SetStatus(string text, string color)
     {
         StatusText.Text = text;
-        StatusDot.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
+        SolidColorBrush brush = new((Color)ColorConverter.ConvertFromString(color));
+        StatusDot.Fill = brush;
+        StatusGlow.Fill = brush;
+        StatusRing.Stroke = brush;
+        StartStatusGlow(color == "#FBBF24" ? 1150 : color == "#F87171" ? 900 : 2600);
+    }
+
+    /// <summary>
+    /// The status dot breathes: a gaussian-feeling glow behind it rises and falls.
+    /// Fast while waiting or broken, slow and steady while linked.
+    /// </summary>
+    private void StartStatusGlow(int periodMs)
+    {
+        StatusGlow.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation
+        {
+            From = 0.04,
+            To = 0.52,
+            Duration = TimeSpan.FromMilliseconds(periodMs),
+            AutoReverse = true,
+            RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever,
+            EasingFunction = new System.Windows.Media.Animation.SineEase
+            {
+                EasingMode = System.Windows.Media.Animation.EasingMode.EaseInOut,
+            },
+        });
+        StatusRing.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation
+        {
+            From = 0.12,
+            To = 0.5,
+            Duration = TimeSpan.FromMilliseconds(periodMs * 1.35),
+            AutoReverse = true,
+            RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever,
+            EasingFunction = new System.Windows.Media.Animation.SineEase
+            {
+                EasingMode = System.Windows.Media.Animation.EasingMode.EaseInOut,
+            },
+        });
+    }
+
+    private static void AnimateIn(UIElement element, int delay)
+    {
+        var translate = new TranslateTransform(0, 16);
+        element.RenderTransform = translate;
+        element.BeginAnimation(OpacityProperty, new System.Windows.Media.Animation.DoubleAnimation
+        {
+            From = 0,
+            To = 1,
+            BeginTime = TimeSpan.FromMilliseconds(delay),
+            Duration = TimeSpan.FromMilliseconds(330),
+        });
+        translate.BeginAnimation(TranslateTransform.YProperty, new System.Windows.Media.Animation.DoubleAnimation
+        {
+            From = 16,
+            To = 0,
+            BeginTime = TimeSpan.FromMilliseconds(delay),
+            Duration = TimeSpan.FromMilliseconds(430),
+            EasingFunction = new System.Windows.Media.Animation.CubicEase
+            {
+                EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut,
+            },
+        });
+    }
+
+    /// <summary>
+    /// Opens the adb tunnel and asks the phone to move the live link onto the cable.
+    /// Safe to press before the phone has connected: the tunnel is left ready.
+    /// </summary>
+    private void UsbButton_Click(object sender, RoutedEventArgs e)
+    {
+        _session.ConnectViaUsb();
     }
 
     private void RefreshDriveLetters()
@@ -188,13 +278,128 @@ public partial class MainWindow : Window
         MessageBox.Show(this, error + hint, "Mount failed", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
+    private void PhoneScreenButton_Click(object sender, RoutedEventArgs e) => OpenScreenWindow();
+
+    private void OpenScreenWindow()
+    {
+        if (!_session.IsConnected)
+        {
+            return;
+        }
+        if (_screen is null)
+        {
+            _screen = new ScreenWindow(_session) { Owner = this };
+            _screen.Closed += (_, _) => _screen = null;
+        }
+        if (!_screen.IsVisible)
+        {
+            _screen.Show();
+        }
+        _screen.Activate();
+    }
+
+    /// <summary>The phone started mirroring, so put its picture on screen.</summary>
+    private void OnPhoneMirrorChanged(bool active)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(() => OnPhoneMirrorChanged(active)));
+            return;
+        }
+        if (active)
+        {
+            OpenScreenWindow();
+        }
+    }
+
+    private void KeymapButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_session.IsConnected)
+        {
+            return;
+        }
+        if (_keymap is null)
+        {
+            _keymap = new KeymapWindow(_session) { Owner = this };
+            _keymap.Closed += (_, _) => _keymap = null;
+        }
+        _keymap.Show();
+        _keymap.Activate();
+    }
+
     private void UnmountButton_Click(object sender, RoutedEventArgs e) => _session.Unmount();
 
     private void OpenButton_Click(object sender, RoutedEventArgs e) => _session.OpenDrive();
 
+    /// <summary>Re-detects both drivers and repaints the card.</summary>
+    private void RefreshDrivers()
+    {
+        if (Drivers.WinFspInstalled)
+        {
+            WinFspStatus.Text = Drivers.WinFspRegistered
+                ? "Installed. The virtual drive is ready."
+                : "Installed, but the driver is not registered yet. Reboot once.";
+            WinFspStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#34D399"));
+            WinFspButton.Content = "Reinstall";
+        }
+        else
+        {
+            WinFspStatus.Text = "Not installed. Needed to mount the shared folder as a drive.";
+            WinFspStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FBBF24"));
+            WinFspButton.Content = "Download";
+        }
+
+        if (Drivers.ViGEmInstalled)
+        {
+            ViGEmStatus.Text = "Installed. The phone can drive games as an Xbox 360 pad.";
+            ViGEmStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#34D399"));
+            ViGEmButton.Content = "Reinstall";
+        }
+        else
+        {
+            ViGEmStatus.Text = "Not installed. Needed only for the virtual Xbox controller.";
+            ViGEmStatus.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8FA29C"));
+            ViGEmButton.Content = "Download";
+        }
+
+        MountButton.IsEnabled = _session.IsConnected && !_session.IsMounted && Drivers.WinFspInstalled;
+    }
+
+    private void RecheckDrivers_Click(object sender, RoutedEventArgs e)
+    {
+        RefreshDrivers();
+        Log(Drivers.WinFspInstalled
+            ? "WinFsp detected."
+            : "WinFsp is still missing. Install it, then reboot once.");
+        Log(Drivers.ViGEmInstalled
+            ? "ViGEmBus detected."
+            : "ViGEmBus is still missing. Install it to use the controller overlay.");
+    }
+
     private void GetWinFsp_Click(object sender, RoutedEventArgs e)
     {
-        Process.Start(new ProcessStartInfo(WinFspEnvironment.DownloadUrl) { UseShellExecute = true });
+        OpenDriverPage(Drivers.WinFspUrl,
+            "Download the WinFsp installer, run it, then press \"Check again\".");
+    }
+
+    private void GetViGEm_Click(object sender, RoutedEventArgs e)
+    {
+        OpenDriverPage(Drivers.ViGEmUrl,
+            "Download the ViGEmBus installer, run it, then press \"Check again\".");
+    }
+
+    private void OpenDriverPage(string url, string hint)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            Log(hint);
+        }
+        catch (Exception ex)
+        {
+            Log("Could not open the browser: " + ex.Message);
+            MessageBox.Show(this, url, "Download link", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 
     private void Log(string message)
@@ -259,6 +464,7 @@ public partial class MainWindow : Window
         }
         _session.Changed -= OnSessionChanged;
         _session.Logged -= Log;
+        _session.PhoneMirrorChanged -= OnPhoneMirrorChanged;
     }
 
     private void MinimizeButton_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
@@ -275,6 +481,8 @@ public partial class MainWindow : Window
     private void LinkedinButton_Click(object sender, RoutedEventArgs e) => OpenLink(LinkLinkedin);
 
     private void EmailButton_Click(object sender, RoutedEventArgs e) => OpenLink(LinkEmail);
+
+    private void PatreonButton_Click(object sender, RoutedEventArgs e) => OpenLink(LinkPatreon);
 
     private void OpenLink(string url)
     {

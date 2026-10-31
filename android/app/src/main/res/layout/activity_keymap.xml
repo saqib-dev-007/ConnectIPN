@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ui_bg"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="16dp">
+
+        <Button
+            android:id="@+id/backButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_button_secondary"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:stateListAnimator="@null"
+            android:text="&#8249;"
+            android:textColor="@color/ui_text"
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:text="@string/keymap_title"
+            android:textColor="@color/ui_text"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_weight="1"
+        android:background="#0B0F11">
+
+        <com.connectipn.KeymapOverlayView
+            android:id="@+id/keymapView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/hintText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_pill"
+            android:paddingStart="10dp"
+            android:paddingTop="5dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="5dp"
+            android:text="@string/keymap_edit_hint"
+            android:textColor="@color/ui_text_muted"
+            android:textSize="11sp" />
+    </FrameLayout>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <Button
+                android:id="@+id/addButton"
+                style="@style/KeymapTool"
+                android:text="@string/keymap_add_button" />
+
+            <Button
+                android:id="@+id/addStick"
+                style="@style/KeymapTool"
+                android:text="@string/keymap_add_stick" />
+
+            <Button
+                android:id="@+id/addLook"
+                style="@style/KeymapTool"
+                android:text="@string/keymap_add_look" />
+
+            <Button
+                android:id="@+id/clearButton"
+                style="@style/KeymapTool"
+                android:text="@string/keymap_clear" />
+
+            <Button
+                android:id="@+id/saveButton"
+                style="@style/KeymapTool"
+                android:text="@string/keymap_save" />
+
+            <Button
+                android:id="@+id/stopButton"
+                style="@style/KeymapTool"
+                android:text="@string/keymap_stop" />
+
+            <Button
+                android:id="@+id/accessButton"
+                style="@style/KeymapTool"
+                android:text="@string/keymap_accessibility" />
+
+            <Button
+                android:id="@+id/overlayButton"
+                style="@style/KeymapTool"
+                android:text="@string/keymap_overlay" />
+        </LinearLayout>
+    </HorizontalScrollView>
+</LinearLayout>

@@ -25,7 +25,7 @@ public class LinkService extends Service {
         Notification notification = new Notification.Builder(this, CHANNEL_ID)
                 .setContentTitle("ConnectIPN")
                 .setContentText("Your PC can access this phone's storage")
-                .setSmallIcon(android.R.drawable.stat_sys_upload_done)
+                .setSmallIcon(R.drawable.ic_stat)
                 .setOngoing(true)
                 .build();
         startForeground(1, notification);
@@ -33,8 +33,14 @@ public class LinkService extends Service {
     }
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        LinkManager.get().init(this);
+    }
+
+    @Override
     public void onDestroy() {
-        LinkManager.get().disconnect();
+        LinkManager.get().onServiceStopped();
         super.onDestroy();
     }
 

@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ConnectIPN</string>
     <string name="tagline">Phone storage over Wi-Fi</string>
@@ -14,6 +13,48 @@
     <string name="action_scan">Scan QR code</string>
     <string name="action_permission">Allow access to all files</string>
     <string name="action_disconnect">Disconnect</string>
+    <string name="action_usb_switch">Connect over USB (fast, low latency)</string>
+
+    <string name="apps_title">Apps</string>
+    <string name="apps_mouse">Mouse</string>
+    <string name="apps_keyboard">Keyboard</string>
+    <string name="apps_gamepad">Controller</string>
+    <string name="apps_hint">Connect your phone to use these.</string>
+    <string name="apps_needs_link">Connect your phone first.</string>
+
+    <string name="mouse_title">Mouse</string>
+    <string name="mouse_close">Done</string>
+    <string name="mouse_hint">Drag to move · tap to click · two fingers to right-click</string>
+    <string name="mouse_left">Left</string>
+    <string name="mouse_right">Right</string>
+    <string name="mouse_disconnected">The link was lost.</string>
+
+    <string name="keyboard_title">Keyboard</string>
+    <string name="keyboard_close">Done</string>
+    <string name="keyboard_hint">Tap to type · Shift, Ctrl, Alt and Win latch until the next key</string>
+    <string name="keyboard_latched">%1$s latched — tap a key to send the chord.</string>
+    <string name="keyboard_disconnected">The link was lost.</string>
+
+    <string name="gamepad_close">Done</string>
+    <string name="gamepad_gyro_off">Gyro off</string>
+    <string name="gamepad_gyro_on">Gyro on</string>
+    <string name="gamepad_disconnected">The link was lost.</string>
+    <string name="gamepad_no_gyro">This phone has no accelerometer.</string>
+
+    <string name="pad_a">A</string>
+    <string name="pad_b">B</string>
+    <string name="pad_x">X</string>
+    <string name="pad_y">Y</string>
+    <string name="pad_lb">LB</string>
+    <string name="pad_rb">RB</string>
+    <string name="pad_lt">LT</string>
+    <string name="pad_rt">RT</string>
+    <string name="pad_back">Back</string>
+    <string name="pad_start">Start</string>
+    <string name="pad_up">▲</string>
+    <string name="pad_down">▼</string>
+    <string name="pad_left">◀</string>
+    <string name="pad_right">▶</string>
 
     <string name="how_title">How it works</string>
     <string name="how_step_1">Open ConnectIPN on your PC and leave it running.</string>
@@ -21,12 +62,104 @@
     <string name="how_step_3">Pick a drive letter on the PC and mount it.</string>
 
     <string name="developed_by">Developed by Saqib Mengal</string>
-    <string name="version_label">ConnectIPN 1.0</string>
+    <string name="version_label">ConnectIPN 2.0</string>
 
     <string name="social_instagram">Instagram</string>
     <string name="social_github">GitHub</string>
     <string name="social_linkedin">LinkedIn</string>
     <string name="social_email">Email</string>
+    <string name="social_patreon">Patreon</string>
 
     <string name="scan_prompt">Scan the code shown on your PC</string>
+    <string name="scan_title">Connect</string>
+    <string name="scan_hint">Align the code inside the frame</string>
+    <string name="torch">Torch</string>
+    <string name="back">Back</string>
+
+    <string name="apps_screen">Screen</string>
+    <string name="apps_screen_hint">Mirror this phone, or open your PC screen</string>
+
+    <string name="screen_title">Screen</string>
+    <string name="screen_status_idle">Mirror this phone to your PC, or open your PC\'s screen on this phone.</string>
+    <string name="screen_status_running">Mirroring this screen to your PC.</string>
+    <string name="screen_start">Start mirroring to PC</string>
+    <string name="screen_stop">Stop mirroring</string>
+    <string name="screen_quality_title">Stream quality</string>
+    <string name="screen_resolution">Resolution: %1$s</string>
+    <string name="screen_fps">Frame rate: %1$d fps</string>
+    <string name="screen_quality">JPEG quality: %1$d</string>
+    <string name="screen_orientation">Orientation: %1$s</string>
+    <string name="screen_aspect">Aspect: %1$s</string>
+    <string name="screen_lock">Dim this phone\'s screen</string>
+    <string name="screen_audio">Send this phone\'s audio to the PC</string>
+    <string name="screen_audio_denied">Audio needs the microphone permission. Mirroring will run without sound.</string>
+    <string name="screen_audio_unsupported">This phone cannot share app audio (needs Android 10 or newer).</string>
+    <string name="screen_forget">Forget this PC</string>
+    <string name="pairing_forgotten">This PC was forgotten. Scan its code to pair again.</string>
+    <string name="screen_pc_title">This phone as a PC screen</string>
+    <string name="screen_view_pc">View PC screen</string>
+    <string name="screen_gaming">Gaming mode (full screen + controls)</string>
+    <string name="screen_hint">Screen capture uses Android\'s own projection permission. Nothing is recorded or uploaded — frames go straight to your PC over the same link as the drive.</string>
+    <string name="screen_needs_link">Connect your phone first.</string>
+    <string name="screen_stats">Sent %1$d frames · %2$d×%3$d</string>
+    <string name="screen_error">Last problem: %1$s</string>
+    <string name="screen_state_on">on</string>
+    <string name="screen_state_off">off</string>
+    <string name="screen_access_state">PC control (accessibility): %1$s · Overlay permission: %2$s</string>
+    <string name="screen_control_access_missing">PC control is off, so taps from the PC do nothing. Tap "Turn on PC control" to see how.</string>
+    <string name="screen_permission_denied">Screen capture permission was denied.</string>
+    <string name="screen_control_access">Turn on PC control</string>
+    <string name="screen_keymap">Key mapping (game controls)</string>
+    <string name="screen_locked_hint">The phone is dimmed so it is not distracting. Android mirrors the composited screen, so a fully black cover would black out the PC image as well.</string>
+
+    <!-- Control access, in plain language -->
+    <string name="screen_access_title">Control this phone from your PC</string>
+    <string name="screen_access_why">Android does not let an ordinary app tap on other apps. It only allows it through an Accessibility service, so ConnectIPN needs that switch turned on once. Until then you can still see this phone on the PC, but clicks do nothing.</string>
+    <string name="screen_access_line_control">Taps, swipes and typing from the PC — %1$s</string>
+    <string name="screen_access_line_overlay">Key mapping drawn over games — %1$s</string>
+    <string name="screen_access_help_title">Turn on PC control</string>
+    <string name="screen_access_help_body">1. Tap "Open settings" below.\n\n2. On that page tap "Installed services" (on some phones it is "Downloaded apps" or "Downloaded services").\n\n3. Tap ConnectIPN, then turn its switch on and confirm with Allow.\n\n4. Press back until you are here again. The line above changes to "on" and the PC can tap this screen.\n\nThe service is only used to send taps and key presses. ConnectIPN does not read your screen content with it, and nothing leaves your own network.</string>
+    <string name="screen_access_help_open">Open settings</string>
+    <string name="screen_access_help_later">Not now</string>
+    <string name="screen_access_overlay_title">Allow drawing over games</string>
+    <string name="screen_access_overlay_body">This is a different switch. It lets ConnectIPN draw the key-mapping buttons on top of a game while you play. It is only needed for key mapping, not for PC control.\n\n1. Tap "Open settings" below.\n\n2. Find ConnectIPN in the list.\n\n3. Turn on "Permit drawing over other apps".</string>
+
+    <string name="desktop_title">PC screen</string>
+    <string name="desktop_connecting">Starting the stream…</string>
+    <string name="desktop_waiting">Waiting for the PC…</string>
+    <string name="desktop_reconnecting">Reconnecting…</string>
+    <string name="desktop_disconnected">The link was lost.</string>
+    <string name="desktop_no_frames">The PC has not sent a picture yet. Keep both apps open, then tap Retry.</string>
+    <string name="desktop_retry">Retry</string>
+    <string name="desktop_stats">%1$d fps · %2$d×%3$d</string>
+    <string name="desktop_received">Receiving the PC screen</string>
+    <string name="desktop_keys">Keys</string>
+    <string name="desktop_pad">Controller</string>
+    <string name="desktop_touch">Touch</string>
+    <string name="desktop_hint">Drag to move · tap to click · two fingers to right-click</string>
+    <string name="desktop_quality_low">Low latency</string>
+    <string name="desktop_quality_balanced">Balanced</string>
+    <string name="desktop_quality_sharp">Sharp</string>
+    <string name="desktop_aspect_fit">Fit</string>
+    <string name="desktop_aspect_fill">Fill</string>
+    <string name="desktop_aspect_stretch">Stretch</string>
+    <string name="desktop_mouse_on">Mouse on</string>
+    <string name="desktop_mouse_off">Mouse off</string>
+    <string name="desktop_collapse">Hide the toolbar</string>
+    <string name="desktop_expand">Show the toolbar</string>
+
+    <string name="keymap_title">Key mapping</string>
+    <string name="keymap_edit_hint">Drag a control to place it. Long-press to remove.</string>
+    <string name="keymap_add_button">Add button</string>
+    <string name="keymap_add_stick">Add joystick</string>
+    <string name="keymap_add_look">Add look area</string>
+    <string name="keymap_save">Save &amp; start</string>
+    <string name="keymap_stop">Stop overlay</string>
+    <string name="keymap_needs_accessibility">Enable the ConnectIPN accessibility service to inject touches.</string>
+    <string name="keymap_needs_overlay">Allow display over other apps to show the controls.</string>
+
+    <string name="keymap_clear">Clear</string>
+    <string name="keymap_accessibility">Accessibility</string>
+    <string name="keymap_overlay">Overlay</string>
+    <string name="accessibility_description">Lets the ConnectIPN PC app tap, swipe and navigate this phone while it is mirrored. Nothing is read from other apps.</string>
 </resources>

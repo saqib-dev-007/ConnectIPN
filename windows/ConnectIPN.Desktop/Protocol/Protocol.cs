@@ -31,6 +31,100 @@ internal static class Proto
     public const byte OpStatFs = 0x30;
     public const byte OpPing = 0x7F;
 
+    /// <summary>
+    /// Phone -> PC input. The phone issues these as requests, but they are
+    /// fire-and-forget: the PC never answers one, so a burst of mouse moves
+    /// costs one small write each and never waits for a round trip.
+    /// Body is always u8 action, i32 a, i32 b.
+    /// </summary>
+    public const byte OpInput = 0x40;
+
+    // --- screen mirroring / remote control -------------------------------------
+    // All of these are fire-and-forget request frames (id 0, never answered), so a
+    // video stream never competes with the pending-call table used by file I/O.
+
+    /// <summary>One encoded screen frame. Body: u8 source, u8 flags, u16 w, u16 h,
+    /// u32 seq, bytes jpeg. Sent by either side.</summary>
+    public const byte OpScreen = 0x50;
+
+    /// <summary>Start/stop a stream and choose its shape. Body: u8 mode, u16 w,
+    /// u16 h, u8 fps, u8 quality, u8 orientation, u8 aspect.</summary>
+    public const byte OpScreenConfig = 0x51;
+
+    /// <summary>PC -> phone touch/key events for controlling the mirrored phone.
+    /// Body: u8 action, u8 flags, u16 x1, u16 y1, u16 x2, u16 y2, u16 duration,
+    /// u16 key, u32 extra.</summary>
+    public const byte OpPhoneInput = 0x52;
+
+    /// <summary>PC -> phone keymap layout as UTF-8 JSON (string).</summary>
+    public const byte OpKeymap = 0x53;
+
+    /// <summary>Raw PCM audio for the mirrored screen. Body: u8 source, u8 flags,
+    /// u16 unused, u32 seq, u32 length, bytes (s16le, stereo, 48 kHz).</summary>
+    public const byte OpAudio = 0x54;
+
+    /// <summary>Phone -> PC capability report. Body: u8 flags, u8 reserved,
+    /// u16 reserved. Bit 0 control ready, 1 overlay allowed, 2 audio supported,
+    /// 3 audio running.</summary>
+    public const byte OpStatus = 0x55;
+
+    /// <summary>PC -> phone: carry the link over the USB cable instead of Wi-Fi.
+    /// Body: u8 mode, u16 port (the loopback port the phone should dial).</summary>
+    public const byte OpTransport = 0x56;
+
+    public const byte TransportUsb = 1;
+
+    public const byte StatusControl = 0x01;
+    public const byte StatusOverlay = 0x02;
+    public const byte StatusAudioCapable = 0x04;
+    public const byte StatusAudioRunning = 0x08;
+
+    public const byte ScreenPhone = 1;
+    public const byte ScreenDesktop = 2;
+
+    public const byte ScreenStartPhone = 1;
+    public const byte ScreenStopPhone = 2;
+    public const byte ScreenStartDesktop = 3;
+    public const byte ScreenStopDesktop = 4;
+
+    public const byte PhoneTap = 1;
+    public const byte PhoneSwipe = 2;
+    public const byte PhoneLongPress = 3;
+    public const byte PhoneKey = 4;
+
+    // Android key codes used by PhoneKey.
+    public const int AndroidKeyBack = 4;
+    public const int AndroidKeyHome = 3;
+    public const int AndroidKeyRecents = 187;
+
+    public const byte OrientAuto = 0;
+    public const byte OrientPortrait = 1;
+    public const byte OrientLandscape = 2;
+
+    public const byte AspectNative = 0;
+    public const byte Aspect16x9 = 1;
+    public const byte Aspect4x3 = 2;
+    public const byte AspectFill = 3;
+
+    public const byte InputMove = 1;
+    public const byte InputButton = 2;
+    public const byte InputWheel = 3;
+    public const byte InputKey = 4;
+    public const byte InputPadAxis = 5;
+    public const byte InputPadButton = 6;
+    public const byte InputPadConnect = 7;
+
+    public const int PadLeftX = 0;
+    public const int PadLeftY = 1;
+    public const int PadRightX = 2;
+    public const int PadRightY = 3;
+    public const int PadLeftTrigger = 4;
+    public const int PadRightTrigger = 5;
+
+    public const byte ButtonLeft = 1;
+    public const byte ButtonRight = 2;
+    public const byte ButtonMiddle = 4;
+
     public const uint AttrDirectory = 1;
     public const uint AttrReadOnly = 2;
 

@@ -12,7 +12,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <AssemblyName>ConnectIPN</AssemblyName>
     <RootNamespace>ConnectIPN</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
@@ -26,10 +26,14 @@
 
   <ItemGroup>
     <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\logo.png" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="QRCoder" Version="1.6.0" />
+    <!-- Virtual Xbox 360 pad. Needs the ViGEmBus driver, same one-time admin
+         install as WinFsp; the app reports it when the driver is missing. -->
+    <PackageReference Include="Nefarius.ViGEm.Client" Version="1.21.256" />
   </ItemGroup>
 
   <ItemGroup>

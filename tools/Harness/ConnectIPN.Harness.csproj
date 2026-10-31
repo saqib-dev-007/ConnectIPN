@@ -11,8 +11,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Nefarius.ViGEm.Client" Version="1.21.256" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\..\windows\ConnectIPN.Desktop\Protocol\Protocol.cs" Link="Shared\Protocol.cs" />
     <Compile Include="..\..\windows\ConnectIPN.Desktop\Net\RemoteClient.cs" Link="Shared\RemoteClient.cs" />
     <Compile Include="..\..\windows\ConnectIPN.Desktop\Net\LinkServer.cs" Link="Shared\LinkServer.cs" />
+    <Compile Include="..\..\windows\ConnectIPN.Desktop\Net\GamepadHost.cs" Link="Shared\GamepadHost.cs" />
+    <Compile Include="..\..\windows\ConnectIPN.Desktop\Net\InputInjector.cs" Link="Shared\InputInjector.cs" />
   </ItemGroup>
 </Project>

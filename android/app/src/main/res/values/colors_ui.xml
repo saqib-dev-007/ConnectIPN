@@ -1,16 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Instrument design system: near-black machined surfaces (#05070A base),
+     hairline strokes, one aqua accent (#2DD4BF) reserved for live state and
+     primary actions, mono-toned greys for everything else. -->
 <resources>
-    <color name="ui_bg">#0B0E13</color>
-    <color name="ui_card">#12161E</color>
-    <color name="ui_card_stroke">#1E2531</color>
-    <color name="ui_text">#EEF2F8</color>
-    <color name="ui_text_muted">#8C96A9</color>
-    <color name="ui_text_dim">#5E6878</color>
-    <color name="ui_accent">#3B82F6</color>
-    <color name="ui_accent_dark">#2563EB</color>
-    <color name="ui_surface">#171C25</color>
-    <color name="ui_surface_stroke">#242B37</color>
-    <color name="ui_green">#22C55E</color>
-    <color name="ui_amber">#F59E0B</color>
-    <color name="ui_red">#EF4444</color>
+    <color name="ui_bg">#04060A</color>
+    <color name="ui_bg_deep">#010307</color>
+    <color name="ui_card">#0B0F12</color>
+    <color name="ui_card_stroke">#171E22</color>
+    <color name="ui_field">#0F1417</color>
+    <color name="ui_field_stroke">#1E292E</color>
+    <color name="ui_text">#E8F1EE</color>
+    <color name="ui_text_muted">#7E938F</color>
+    <color name="ui_text_dim">#4D5D5A</color>
+    <color name="ui_accent">#2DD4BF</color>
+    <color name="ui_accent_dark">#14B8A6</color>
+    <color name="ui_accent_deep">#14665C</color>
+    <color name="ui_highlight">#5EEAD4</color>
+    <color name="ui_glow_start">#1CC9B0</color>
+    <color name="ui_glow_end">#5EEAD4</color>
+    <color name="ui_on_accent">#04241F</color>
+    <color name="ui_surface">#0F1417</color>
+    <color name="ui_surface_stroke">#1E292E</color>
+    <color name="ui_green">#34D399</color>
+    <color name="ui_amber">#FBBF24</color>
+    <color name="ui_red">#F87171</color>
+    <color name="ui_warn">#FBBF24</color>
 </resources>

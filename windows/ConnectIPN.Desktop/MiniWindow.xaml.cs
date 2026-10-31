@@ -20,7 +20,14 @@ public partial class MiniWindow : Window
         InitializeComponent();
         _session.Changed += Refresh;
         Deactivated += OnDeactivated;
-        Loaded += (_, _) => Reposition();
+        Loaded += (_, _) =>
+        {
+            Reposition();
+            if (Content is UIElement root)
+            {
+                UiFx.SlideIn(root, 0);
+            }
+        };
     }
 
     public event Action? OpenAppRequested;
@@ -68,7 +75,7 @@ public partial class MiniWindow : Window
         LinkPanel.Visibility = connected ? Visibility.Visible : Visibility.Collapsed;
 
         StatusDot.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(
-            connected ? "#22C55E" : _session.State == LinkState.Error ? "#EF4444" : "#F59E0B"));
+            connected ? "#34D399" : _session.State == LinkState.Error ? "#F87171" : "#FBBF24"));
         StatusText.Text = connected
             ? $"Connected to {_session.DeviceName}"
             : _session.State == LinkState.Error

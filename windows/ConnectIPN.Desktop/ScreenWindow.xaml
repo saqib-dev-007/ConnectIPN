@@ -1,0 +1,177 @@
+﻿<Window x:Class="ConnectIPN.ScreenWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ConnectIPN â€” Phone screen"
+        Width="1120" Height="760" MinWidth="680" MinHeight="460"
+        Background="#05070A"
+        WindowStartupLocation="CenterOwner"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="Muted" Color="#7E938F" />
+        <SolidColorBrush x:Key="Dim" Color="#4D5D5A" />
+
+        <Style x:Key="ToolButton" TargetType="Button">
+            <Setter Property="Background" Value="#0F1417" />
+            <Setter Property="Foreground" Value="#E8F1EE" />
+            <Setter Property="BorderBrush" Value="#1E292E" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="11,6" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="7">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="#161D1F" />
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#2E3A38" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="#1B2326" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource ToolButton}">
+            <Setter Property="Foreground" Value="#052E28" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome" Background="{TemplateBinding Background}"
+                                CornerRadius="7">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.9" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#1CC9B0" Offset="0" />
+                        <GradientStop Color="#5EEAD4" Offset="1" />
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Background="#0B0F12" BorderBrush="#12181A" BorderThickness="0,0,0,1" Padding="14,9">
+            <DockPanel LastChildFill="False">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#FBBF24" VerticalAlignment="Center" />
+                    <TextBlock x:Name="StatusText" Text="Waiting for the phoneâ€¦"
+                               Foreground="{StaticResource Muted}" FontSize="12"
+                               Margin="8,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="ResolutionButton" Style="{StaticResource ToolButton}" Content="720p"
+                            Margin="0,0,6,0" Click="ResolutionButton_Click" ToolTip="Capture resolution on the phone" />
+                    <Button x:Name="FpsButton" Style="{StaticResource ToolButton}" Content="24 fps"
+                            Margin="0,0,6,0" Click="FpsButton_Click" ToolTip="Frames per second" />
+                    <Button x:Name="QualityButton" Style="{StaticResource ToolButton}" Content="Q60"
+                            Margin="0,0,6,0" Click="QualityButton_Click" ToolTip="JPEG quality" />
+                    <Button x:Name="OrientationButton" Style="{StaticResource ToolButton}" Content="Auto"
+                            Margin="0,0,6,0" Click="OrientationButton_Click" ToolTip="Phone orientation" />
+                    <Button x:Name="AspectButton" Style="{StaticResource ToolButton}" Content="Native"
+                            Margin="0,0,14,0" Click="AspectButton_Click" ToolTip="Aspect ratio" />
+                    <Button Style="{StaticResource AccentButton}" Content="Stop" Click="StopButton_Click" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Live view -->
+        <Border Grid.Row="1" Background="#050708" ClipToBounds="True">
+            <Grid x:Name="Surface" Background="#050708"
+                  MouseLeftButtonDown="Surface_MouseLeftButtonDown"
+                  MouseLeftButtonUp="Surface_MouseLeftButtonUp"
+                  MouseRightButtonDown="Surface_MouseRightButtonDown"
+                  MouseMove="Surface_MouseMove">
+
+                <Image x:Name="Frame" Stretch="Uniform"
+                       RenderOptions.BitmapScalingMode="HighQuality" />
+
+                <StackPanel x:Name="Placeholder" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            MaxWidth="420">
+                    <TextBlock Text="Waiting for the phone" Foreground="#C7D6D2" FontSize="16"
+                               FontWeight="SemiBold" HorizontalAlignment="Center" />
+                    <TextBlock Text="Open Screen on the phone and tap Start mirroring. This window fills in on its own."
+                               Foreground="#4D5D5A" FontSize="12.5" TextWrapping="Wrap"
+                               TextAlignment="Center" Margin="0,8,0,0" />
+                </StackPanel>
+
+                <Border x:Name="StatsChip" Background="#B30E1416" CornerRadius="6" Padding="8,4"
+                        HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10"
+                        Visibility="Collapsed">
+                    <TextBlock x:Name="StatsText" Text="" Foreground="#9AB5B0" FontSize="10.5"
+                               FontFamily="Consolas" />
+                </Border>
+
+                <Border x:Name="ControlBanner" Background="#CC13231F" BorderBrush="#2A5348"
+                        BorderThickness="1" CornerRadius="10" Padding="14,10"
+                        HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="16"
+                        MaxWidth="520" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="PC control is off" Foreground="#5EEAD4" FontSize="12.5"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="On the phone: Screen â†’ Allow PC control, then enable ConnectIPN under Installed services. Taps and swipes are ignored until then."
+                                   Foreground="#7E938F" FontSize="11.5" TextWrapping="Wrap" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="#0B0F12" BorderBrush="#12181A" BorderThickness="0,1,0,0" Padding="14,9">
+            <DockPanel LastChildFill="False">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <Button Style="{StaticResource ToolButton}" Content="â—€ Back" Margin="0,0,6,0"
+                            Click="BackButton_Click" ToolTip="Send the Back key to the phone" />
+                    <Button Style="{StaticResource ToolButton}" Content="â— Home" Margin="0,0,6,0"
+                            Click="HomeButton_Click" ToolTip="Send the Home key to the phone" />
+                    <Button Style="{StaticResource ToolButton}" Content="â–£ Recents" Margin="0,0,6,0"
+                            Click="RecentsButton_Click" ToolTip="Open the recent apps switcher" />
+                    <Button Style="{StaticResource ToolButton}" Content="â›¶ Full screen"
+                            Click="FullScreenButton_Click" ToolTip="Double-click the picture for the same thing" />
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Right" x:Name="HintText"
+                           Text="Click to tap Â· drag to swipe Â· right-click to long-press Â· Esc closes"
+                           Foreground="{StaticResource Dim}" FontSize="11" VerticalAlignment="Center" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

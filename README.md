@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/saqib-dev-007/ConnectIPN/releases/latest"><img alt="Download" src="https://img.shields.io/badge/download-latest%20release-2ea043?style=flat-square"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.0-3b82f6?style=flat-square">
+  <img alt="Version" src="https://img.shields.io/badge/version-2.0-3b82f6?style=flat-square">
   <img alt="Platforms" src="https://img.shields.io/badge/platforms-Windows%20%7C%20Android-8b5cf6?style=flat-square">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-PolyForm%20Noncommercial-f59e0b?style=flat-square"></a>
 </p>
@@ -66,12 +66,28 @@ drives every file operation.
 - **A real drive letter.** `Z:\` (or any free letter) backed by WinFsp, with the file
   operations Explorer actually uses — create, read, write, flush, rename, delete-on-close,
   directory enumeration, volume info and free-space queries.
-- **QR pairing.** The PC renders a `connectipn://pair` code carrying its LAN address, port
-  and a one-time token. The token is regenerated on every launch, so a saved QR code cannot
-  reconnect later.
+- **QR pairing, once.** The PC renders a `connectipn://pair` code carrying its LAN address,
+  port and pairing token. The token is stable across restarts, so a phone that paired once
+  reconnects on its own — no scanning again every launch.
 - **Pipelined transport.** One TCP connection carries many in-flight requests. Reads land
   straight in the WinFsp buffer and writes go straight from it — no intermediate copies in
   the hot path. Measured at **~214 MiB/s write and ~362 MiB/s read** over loopback.
+- **Your phone is also a mouse.** Once paired, the phone's **Apps** section opens a
+  trackpad: drag to move the pointer, tap to left-click, two fingers to right-click, and
+  the middle strip scrolls. It drives the PC through `SendInput`, so it works in any
+  application, not just Explorer.
+- **Screen mirroring both ways.** Send the phone screen to the PC (and click, drag or
+  long-press on it), or open the PC screen on the phone with touch, a transparent
+  keyboard and an Xbox-style controller overlay — the same pad the Controller screen
+  uses, with gyro steering and a mouse kill-switch for gaming.
+- **Wi-Fi or USB.** Pair over the network, then flip one switch to move the link onto
+  the cable. The desktop detects a USB-attached phone and offers **Connect via USB**;
+  USB is faster, steadier and immune to Wi-Fi drops. Unplugging falls back to Wi-Fi
+  on its own.
+- **Phone audio on the PC.** While mirroring, the phone's speaker mix travels with the
+  picture and plays on the PC (Android 10+, where the source app allows capture).
+- **Key mapping.** WASD/joystick, buttons and look areas, laid out on the PC or on the
+  phone and injected through Android's accessibility gestures.
 - **Stays out of the way.** Closing the window hides the app to the notification area. The
   tray icon opens a small flyout with the pairing code, or the live drive state, and can
   mount without opening the full window.
@@ -96,6 +112,7 @@ drives every file operation.
 |---|---|
 | Windows | Windows 10 or 11, x64. [WinFsp 2.x](https://winfsp.dev/rel/) — a kernel driver that needs a one-time administrator install. |
 | Android | Android 8.0 (API 26) or newer, a camera for the QR code, and the same Wi-Fi network as the PC. |
+| USB mode (optional) | USB debugging on the phone, and [Android platform-tools](https://developer.android.com/tools/releases/platform-tools) (`adb`) on the PC. |
 | Build only | .NET 8 SDK, JDK 17, Android SDK 34 (build-tools 34.0.0). |
 
 The Windows build is self-contained, so the target PC does not need .NET installed. WinFsp
@@ -109,15 +126,15 @@ page:
 
 | Platform | File | Size |
 |---|---|---|
-| **Android 8.0+** | [ConnectIPN-1.0.apk](https://github.com/saqib-dev-007/ConnectIPN/releases/latest/download/ConnectIPN-1.0.apk) | 3.0 MB |
-| **Windows 10 / 11 (x64)** | [ConnectIPN-Setup.exe](https://github.com/saqib-dev-007/ConnectIPN/releases/latest/download/ConnectIPN-Setup.exe) | 125 MB |
+| **Android 8.0+** | [ConnectIPN-2.0.apk](https://github.com/saqib-dev-007/ConnectIPN/releases/latest/download/ConnectIPN-2.0.apk) | 3.2 MB |
+| **Windows 10 / 11 (x64)** | [ConnectIPN-Setup-2.0.exe](https://github.com/saqib-dev-007/ConnectIPN/releases/latest/download/ConnectIPN-Setup-2.0.exe) | 126 MB |
 
 Install [WinFsp 2.x](https://winfsp.dev/rel/) before the Windows app — it is the driver that
 makes the drive letter possible, it needs administrator rights once, and it needs a reboot.
 
 ### Windows
 
-Download `ConnectIPN-Setup.exe` and run it. The installer is a single file and needs no .NET
+Download `ConnectIPN-Setup-2.0.exe` and run it. The installer is a single file and needs no .NET
 runtime.
 
 - choose the install folder (default `%LOCALAPPDATA%\Programs\ConnectIPN`),
@@ -131,7 +148,7 @@ driver does.
 Unattended install:
 
 ```bat
-ConnectIPN-Setup.exe --silent D:\Apps\ConnectIPN [/no-desktop] [/no-startup]
+ConnectIPN-Setup-2.0.exe --silent D:\Apps\ConnectIPN [/no-desktop] [/no-startup]
 ```
 
 Uninstall from **Settings → Apps → ConnectIPN**, or run `ConnectIPN.exe --uninstall`.
@@ -141,11 +158,11 @@ If you would rather not install anything, publish the app to a folder and run
 
 ### Android
 
-Download `ConnectIPN-1.0.apk` on the phone and open it, allowing installs from this source
+Download `ConnectIPN-2.0.apk` on the phone and open it, allowing installs from this source
 when prompted. Or push it over USB:
 
 ```bash
-adb install -r ConnectIPN-1.0.apk
+adb install -r ConnectIPN-2.0.apk
 ```
 
 Open the app and grant **All files access** when asked. Without it the drive still works,
@@ -184,6 +201,18 @@ id, so many operations can be in flight at once.
 - Metadata is cached for 1 s (`FileInfoTimeout`), and the drive's own attribute cache keeps
   Explorer's repeated queries off the wire.
 
+### USB transport
+
+The phone dials the PC, so USB cannot simply replace the address. Instead the PC opens
+an adb reverse tunnel with `adb reverse tcp:47653 tcp:<its port>`: anything the phone
+connects to on its own `127.0.0.1:47653` is carried down the cable into the same
+listener. The PC then sends `TRANSPORT` (opcode `0x56`) telling the phone to redial, and
+recognises the new connection by its loopback remote address.
+
+The phone remembers the choice. If a USB connect fails — cable pulled, adb server
+restarted — it clears the preference and falls back to the saved Wi-Fi address on the
+next retry, so you never end up stranded.
+
 The full wire format is documented in [PROTOCOL.md](PROTOCOL.md).
 
 ### The virtual drive
@@ -205,6 +234,39 @@ The app serves the tree under its root folder:
 Paths are resolved lexically and any `..` segment is rejected, so a client cannot escape
 the shared root.
 
+## Screen mirroring and control
+
+Open **Apps → Screen** on the phone. There are two directions:
+
+- **Phone → PC.** Tap **Start mirroring to PC**, accept Android's screen-capture prompt,
+  then open **Phone screen** on the PC. Click to tap, drag to swipe, right-click to
+  long-press, and use the toolbar for Back/Home/Recents. The PC can change resolution,
+  frame rate, JPEG quality, orientation and aspect ratio while the stream runs.
+- **PC → phone.** Tap **View PC screen** and the PC sends its primary display. Drag to
+  move the pointer, tap to click, two fingers to right-click, and use **Keys** for a
+  transparent keyboard or **Controller** for the same pad as the Controller screen:
+  triggers, bumpers, d-pad, ABXY, both sticks, gyro steering, Back/Start.
+
+The toolbar across the top of the PC view has a **quality** button, an **aspect** button
+(Fit / Fill / Stretch), **Keys** and **Controller**. Tap the **▲** handle in the middle to
+slide the bar away — the fps read-out and the bottom hint go with it — and a dim **▼**
+brings it back. With the controller open, its **Mouse** button above Start kills the
+phone-to-PC pointer, so a stray thumb cannot click anything on the desktop mid-game.
+
+For the PC to control the phone, enable **ConnectIPN** under
+**Settings → Accessibility**. The keymap overlay also needs **Display over other apps**.
+Both are one-time switches; the screen-capture prompt appears once per mirroring session.
+
+**Key mapping** (Apps → Screen → allow PC control, then **Key mapping** on the PC) places a
+WASD joystick, buttons and a look region over the game. Drag to place, right-click to
+remove, then **Send to phone**. The phone can edit the same layout itself.
+
+What it deliberately does not do: H.264 (frames are JPEG), a true *extended* desktop
+(that needs a virtual display driver), and a fully black phone cover — Android mirrors
+the composited screen, so the **Dim** cover is visible in the stream too. Audio capture
+follows Android's rules: apps that opt out of playback capture stay silent, and anything
+below Android 10 cannot be captured at all.
+
 ## Background mode
 
 Closing the main window does not quit the app. The bridge keeps running and the icon moves
@@ -221,6 +283,8 @@ to the notification area (the **hidden icons** chevron on the taskbar).
 The drive letter is remembered in `%LOCALAPPDATA%\ConnectIPN\settings.json`.
 
 ## Building from source
+
+Every artifact goes to `release\` — see [BUILD.md](BUILD.md) for the full rules.
 
 ```powershell
 # Everything: Windows app, Android APK, installer
@@ -239,7 +303,7 @@ dotnet build windows\ConnectIPN.Desktop\ConnectIPN.Desktop.csproj -c Release
 # Self-contained folder
 dotnet publish windows\ConnectIPN.Desktop\ConnectIPN.Desktop.csproj -c Release -r win-x64 --self-contained true -o dist\windows
 
-# Android APK -> android\app\build\outputs\apk\debug\ConnectIPN-1.0.apk
+# Android APK -> android\app\build\outputs\apk\debug\ConnectIPN-2.0.apk
 cd android
 .\gradlew.bat assembleDebug
 ```
@@ -296,11 +360,21 @@ windows/ConnectIPN.Desktop/     WPF app: QR, listener, RPC client, WinFsp file s
   App/TrayIcon.cs               notification-area icon and menu
   App/Uninstaller.cs            --uninstall cleanup
   MiniWindow.xaml               bottom-right flyout: QR code or live drive state
+  ScreenWindow.xaml             phone screen on the PC + touch control
+  KeymapWindow.xaml             keymap editor, pushes JSON to the phone
+  Net/ScreenStreamer.cs         captures the desktop for the phone
+  Net/AdbBridge.cs              adb reverse tunnel behind USB mode
 android/app/src/main/java/com/connectipn/
   Protocol.java                 wire format (mirrors the C# side)
   LinkClient.java               socket, handshake, worker pool
   FileServer.java               file operations on java.io.File
   MainActivity.java             scanner, permissions, UI
+  ScreenActivity.java           mirror phone / open PC screen, stream options
+  ScreenCaptureService.java     MediaProjection + JPEG encoder
+  DesktopViewActivity.java      PC screen, touch, keyboard and controller overlays
+  RemoteControlService.java     accessibility gestures (PC controls the phone)
+  KeymapOverlayView.java        keymap drawing + touch injection
+  KeymapService.java            keeps the keymap on top of other apps
   LinkService.java              foreground service that keeps the link alive
 installer/ConnectIPN.Setup/     Windows setup program (payload embedded at build time)
 tools/Harness                   cross-language protocol test
@@ -325,6 +399,18 @@ LICENSE                         PolyForm Noncommercial 1.0.0
 | Explorer shows stale sizes | Metadata is cached for 1 s; press F5. |
 | Very slow transfers | 2.4 GHz Wi-Fi or a weak signal. The protocol itself saturates a 5 GHz link. |
 | Tray icon missing | It may be in the hidden-icons chevron; drag it onto the taskbar to pin it. |
+| Play Protect blocks the APK | The APK is self-signed and sideloaded, so Play Protect warns on the first install. Tap **More details → Install anyway**, or turn off *Scan apps with Play Protect* in the Play Store settings while you test. |
+| The phone does not reconnect by itself | The pairing is remembered after one successful scan. If it still asks, open the phone app and leave it on the main screen for a moment — it retries every few seconds. Long-press **Disconnect** to forget the PC on purpose. |
+| Taps from the PC do nothing | The phone has not granted control yet. Open **Screen → Allow PC control** and enable ConnectIPN under Installed services; the PC shows a banner until it does. |
+| Mirroring shows one frame and stops | Install the current build on both sides. The old capture path allocated two full-screen bitmaps per frame and ran out of memory after the first frame. |
+| "No picture from the PC yet" on the phone | The PC must be running and connected. Tap **Retry**; the desktop logs *Sending this PC's screen at …* in its ACTIVITY list when the stream starts. |
+| PC cannot tap or swipe the phone | Enable the ConnectIPN accessibility service: **Screen → Allow PC control**, then turn it on in Settings. The Screen page shows whether it is on. |
+| Controller overlay does nothing | ViGEmBus is not installed. Open the **DRIVERS** card in the desktop app, download ViGEmBus, install it, then press **Check again**. |
+| Screen stream is laggy | Lower the resolution and fps on the sender, or pick **Low latency** on the phone. 5 GHz Wi-Fi matters more than any setting. |
+| **Connect via USB** never appears | The PC cannot find `adb`. Install Android platform-tools, or check that `adb devices` lists the phone as `device` — `unauthorized` means you have not accepted the "Allow USB debugging?" prompt on the phone. |
+| USB button is there but the link stays on Wi-Fi | The tunnel could not be opened. The panel says why; usually USB debugging was revoked. Replug the cable and accept the prompt. |
+| Phone keeps dropping back to Wi-Fi after unplugging | Expected. The phone clears its USB preference and redials the saved Wi-Fi address on the next retry. |
+| Taps on the PC view do nothing while gaming | The controller's **Mouse** button is set to **Mouse off**. Tap it back to **Mouse on**, or close the controller. |
 
 ## Security and limitations
 
@@ -377,6 +463,7 @@ Built by **Saqib Mengal**.
 [Instagram](https://www.instagram.com/saqib_mengal_007) ·
 [GitHub](https://github.com/saqib-dev-007) ·
 [LinkedIn](https://www.linkedin.com/in/saqib-mengal-76855b389/) ·
+[Patreon](https://www.patreon.com/cw/SaqibMengal) ·
 [saqibmengal7@gmail.com](mailto:saqibmengal7@gmail.com)
 
 Thanks to the [WinFsp](https://winfsp.dev/) project for the file-system framework and to

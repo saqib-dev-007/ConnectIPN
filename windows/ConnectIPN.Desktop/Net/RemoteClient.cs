@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,6 +17,46 @@ internal sealed class RemoteException : IOException
     public RemoteException(int code) : base($"device reported error {code}")
     {
         Code = code;
+    }
+}
+
+internal readonly struct ScreenFrame
+{
+    public readonly byte Source;
+    public readonly int Width;
+    public readonly int Height;
+    public readonly int Sequence;
+    public readonly byte[] Jpeg;
+
+    public ScreenFrame(byte source, int width, int height, int sequence, byte[] jpeg)
+    {
+        Source = source;
+        Width = width;
+        Height = height;
+        Sequence = sequence;
+        Jpeg = jpeg;
+    }
+}
+
+internal readonly struct ScreenConfig
+{
+    public readonly byte Mode;
+    public readonly int Width;
+    public readonly int Height;
+    public readonly int Fps;
+    public readonly int Quality;
+    public readonly byte Orientation;
+    public readonly byte Aspect;
+
+    public ScreenConfig(byte mode, int width, int height, int fps, int quality, byte orientation, byte aspect)
+    {
+        Mode = mode;
+        Width = width;
+        Height = height;
+        Fps = fps;
+        Quality = quality;
+        Orientation = orientation;
+        Aspect = aspect;
     }
 }
 
@@ -82,20 +123,54 @@ internal sealed class RemoteClient : IDisposable
     private const int MaxChunkSize = 1 << 20;
 
     private int _nextId;
+    private InputInjector? _input;
+    private GamepadHost? _gamepad;
     private volatile bool _alive = true;
+
+    /// <summary>Frames received from the phone since the link came up (diagnostics).</summary>
+    public long FramesIn;
+
+    /// <summary>Frames sent to the phone since the link came up (diagnostics).</summary>
+    public long FramesOut;
+
+    /// <summary>The last problem seen while moving screen data, for the UI.</summary>
+    public string? LastScreenError;
 
     public string DeviceName { get; }
     public string RootPath { get; }
     public bool IsAlive => _alive;
 
+    /// <summary>True when this link arrived over USB through an adb reverse tunnel.</summary>
+    public bool IsUsb { get; }
+
     public event Action<string>? Disconnected;
 
-    private RemoteClient(Socket socket, NetworkStream stream, string deviceName, string rootPath)
+    /// <summary>A JPEG frame arrived from the phone (screen mirroring).</summary>
+    public event Action<ScreenFrame>? ScreenFrameReceived;
+
+    /// <summary>The phone asked us to start/stop sending the desktop.</summary>
+    public event Action<ScreenConfig>? ScreenConfigReceived;
+
+    /// <summary>The phone pushed a keymap layout (not used yet, kept symmetrical).</summary>
+    public event Action<string>? KeymapReceived;
+
+    /// <summary>A chunk of 16-bit stereo PCM from the phone's speaker mix.</summary>
+    public event Action<byte[], int>? AudioReceived;
+
+    /// <summary>The phone reported what it can do (control / overlay / audio).</summary>
+    public event Action<byte>? StatusReceived;
+
+    /// <summary>Last capability flags the phone reported.</summary>
+    public byte PhoneStatus;
+
+    private RemoteClient(Socket socket, NetworkStream stream, string deviceName, string rootPath,
+        bool viaUsb)
     {
         _socket = socket;
         _stream = stream;
         DeviceName = deviceName;
         RootPath = rootPath;
+        IsUsb = viaUsb;
         _reader = new Thread(ReaderLoop)
         {
             IsBackground = true,
@@ -107,11 +182,29 @@ internal sealed class RemoteClient : IDisposable
     public static RemoteClient Accept(TcpListener listener, string token, CancellationToken ct)
     {
         Socket socket = listener.AcceptSocketAsync(ct).AsTask().GetAwaiter().GetResult();
+        // adb reverse makes the phone dial loopback, so a connection from 127.0.0.1 is
+        // the one that came in over the cable. Nothing else can reach this port from
+        // the loopback address.
+        bool viaUsb = socket.RemoteEndPoint is IPEndPoint remote && IPAddress.IsLoopback(remote.Address);
         socket.NoDelay = true;
         socket.ReceiveBufferSize = 1 << 20;
         socket.SendBufferSize = 1 << 20;
-        socket.ReceiveTimeout = 10000;
-        socket.SendTimeout = 10000;
+        // A blocking read on purpose: the phone sends nothing at all while it is idle,
+        // and a receive timeout used to surface as "device disconnected" after ten
+        // quiet seconds. Dead links are caught by the keep-alive probe and by writes.
+        socket.ReceiveTimeout = 0;
+        socket.SendTimeout = 30000;
+        socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+        try
+        {
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime, 15);
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveInterval, 5);
+            socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveRetryCount, 3);
+        }
+        catch (Exception)
+        {
+            // older Windows builds do not expose the fine-grained keep-alive knobs
+        }
 
         var stream = new NetworkStream(socket, ownsSocket: false);
         try
@@ -145,7 +238,7 @@ internal sealed class RemoteClient : IDisposable
             SendHelloAck(stream, id, Proto.Ok, "ConnectIPN", rootPath);
             socket.ReceiveTimeout = 0;
             socket.SendTimeout = 0;
-            return new RemoteClient(socket, stream, deviceName, rootPath);
+            return new RemoteClient(socket, stream, deviceName, rootPath, viaUsb);
         }
         catch
         {
@@ -480,6 +573,13 @@ internal sealed class RemoteClient : IDisposable
                     throw new InvalidDataException($"bad frame length {len}");
                 }
                 int bodyLength = len - 6;
+                if (kind == Proto.KindRequest)
+                {
+                    // The phone is allowed to issue requests on the same socket
+                    // (currently only input); they are handled here, in order.
+                    HandleRequest(op, bodyLength);
+                    continue;
+                }
                 if (kind != Proto.KindResponse)
                 {
                     Skip(bodyLength);
@@ -506,6 +606,341 @@ internal sealed class RemoteClient : IDisposable
         catch (Exception ex)
         {
             Fail(ex is EndOfStreamException ? "device disconnected" : ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Handles a request the phone sent us. Input is the only one today, and it is
+    /// deliberately never answered: the phone must not wait for a round trip per
+    /// mouse move. Unknown requests are drained and ignored.
+    /// </summary>
+    private void HandleRequest(byte op, int bodyLength)
+    {
+        switch (op)
+        {
+            case Proto.OpScreen:
+                HandleScreenFrame(bodyLength);
+                return;
+            case Proto.OpScreenConfig:
+                HandleScreenConfig(bodyLength);
+                return;
+            case Proto.OpKeymap:
+                HandleKeymap(bodyLength);
+                return;
+            case Proto.OpAudio:
+                HandleAudio(bodyLength);
+                return;
+            case Proto.OpStatus:
+                HandleStatus(bodyLength);
+                return;
+        }
+
+        if (op != Proto.OpInput || bodyLength < 9 || bodyLength > 32)
+        {
+            Skip(bodyLength);
+            return;
+        }
+
+        Span<byte> body = stackalloc byte[32];
+        ReadExact(_stream, body[..bodyLength]);
+
+        var reader = new BodyReader(body[..bodyLength]);
+        byte action = reader.U8();
+        int a = unchecked((int)reader.U32());
+        int b = unchecked((int)reader.U32());
+
+        switch (action)
+        {
+            case Proto.InputPadConnect:
+                if (b != 0)
+                {
+                    (_gamepad ??= new GamepadHost()).TryOpen(out _);
+                }
+                else
+                {
+                    _gamepad?.Dispose();
+                    _gamepad = null;
+                }
+                break;
+            case Proto.InputPadAxis:
+                (_gamepad ??= new GamepadHost()).Axis(a, b);
+                break;
+            case Proto.InputPadButton:
+                (_gamepad ??= new GamepadHost()).Button(unchecked((uint)a), b != 0);
+                break;
+            default:
+                (_input ??= new InputInjector()).Apply(action, a, b);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Body: u8 source, u8 flags, u16 width, u16 height, u32 seq, bytes jpeg.
+    /// The JPEG is copied into its own array because the consumer decodes it later,
+    /// on another thread, after this frame has left the socket buffer.
+    /// </summary>
+    private void HandleScreenFrame(int bodyLength)
+    {
+        if (bodyLength < 14)
+        {
+            Skip(bodyLength);
+            return;
+        }
+
+        Span<byte> head = stackalloc byte[10];
+        ReadExact(_stream, head);
+        byte source = head[0];
+        int width = BinaryPrimitives.ReadUInt16BigEndian(head[2..]);
+        int height = BinaryPrimitives.ReadUInt16BigEndian(head[4..]);
+        int seq = BinaryPrimitives.ReadInt32BigEndian(head[6..]);
+
+        Span<byte> lengthBytes = stackalloc byte[4];
+        ReadExact(_stream, lengthBytes);
+        int length = BinaryPrimitives.ReadInt32BigEndian(lengthBytes);
+        if (length < 0 || length > bodyLength - 14)
+        {
+            throw new InvalidDataException("screen frame is larger than its envelope");
+        }
+
+        byte[] jpeg = new byte[length];
+        ReadExact(_stream, jpeg);
+        Skip(bodyLength - 14 - length);
+        FramesIn++;
+        // A bug in a viewer window must never take the whole link down with it.
+        try
+        {
+            ScreenFrameReceived?.Invoke(new ScreenFrame(source, width, height, seq, jpeg));
+        }
+        catch (Exception ex)
+        {
+            LastScreenError = ex.Message;
+        }
+    }
+
+    private void HandleScreenConfig(int bodyLength)
+    {
+        if (bodyLength < 9)
+        {
+            Skip(bodyLength);
+            return;
+        }
+        Span<byte> body = stackalloc byte[9];
+        ReadExact(_stream, body);
+        Skip(bodyLength - 9);
+        var config = new ScreenConfig(
+            body[0],
+            BinaryPrimitives.ReadUInt16BigEndian(body[1..]),
+            BinaryPrimitives.ReadUInt16BigEndian(body[3..]),
+            body[5],
+            body[6],
+            body[7],
+            body[8]);
+        try
+        {
+            ScreenConfigReceived?.Invoke(config);
+        }
+        catch (Exception ex)
+        {
+            LastScreenError = ex.Message;
+        }
+    }
+
+    private void HandleKeymap(int bodyLength)
+    {
+        if (bodyLength < 2)
+        {
+            Skip(bodyLength);
+            return;
+        }
+        Span<byte> lengthBytes = stackalloc byte[2];
+        ReadExact(_stream, lengthBytes);
+        int length = BinaryPrimitives.ReadUInt16BigEndian(lengthBytes);
+        if (length > bodyLength - 2)
+        {
+            throw new InvalidDataException("keymap is larger than its envelope");
+        }
+        byte[] utf8 = new byte[length];
+        ReadExact(_stream, utf8);
+        Skip(bodyLength - 2 - length);
+        try
+        {
+            KeymapReceived?.Invoke(Encoding.UTF8.GetString(utf8));
+        }
+        catch (Exception ex)
+        {
+            LastScreenError = ex.Message;
+        }
+    }
+
+    /// <summary>Body: u8 source, u8 flags, u16 unused, u32 seq, u32 length, PCM.</summary>
+    private void HandleAudio(int bodyLength)
+    {
+        if (bodyLength < 12)
+        {
+            Skip(bodyLength);
+            return;
+        }
+        Span<byte> head = stackalloc byte[12];
+        ReadExact(_stream, head);
+        int length = BinaryPrimitives.ReadInt32BigEndian(head[8..]);
+        if (length < 0 || length > bodyLength - 12)
+        {
+            throw new InvalidDataException("audio frame is larger than its envelope");
+        }
+        byte[] pcm = new byte[length];
+        ReadExact(_stream, pcm);
+        Skip(bodyLength - 12 - length);
+        try
+        {
+            AudioReceived?.Invoke(pcm, length);
+        }
+        catch (Exception ex)
+        {
+            LastScreenError = ex.Message;
+        }
+    }
+
+    private void HandleStatus(int bodyLength)
+    {
+        if (bodyLength < 4)
+        {
+            Skip(bodyLength);
+            return;
+        }
+        Span<byte> body = stackalloc byte[4];
+        ReadExact(_stream, body);
+        Skip(bodyLength - 4);
+        PhoneStatus = body[0];
+        try
+        {
+            StatusReceived?.Invoke(body[0]);
+        }
+        catch (Exception ex)
+        {
+            LastScreenError = ex.Message;
+        }
+    }
+
+    // --- outbound screen frames -------------------------------------------------
+
+    /// <summary>Sends one JPEG frame to the phone. Fire-and-forget, never answered.</summary>
+    public void SendScreenFrame(byte source, int width, int height, int sequence, ReadOnlySpan<byte> jpeg)
+    {
+        if (!_alive)
+        {
+            return;
+        }
+        // frame header (10) + source(1) + flags(1) + w(2) + h(2) + seq(4) + length(4)
+        Span<byte> head = stackalloc byte[24];
+        BinaryPrimitives.WriteInt32BigEndian(head, 6 + 14 + jpeg.Length);
+        head[4] = Proto.KindRequest;
+        BinaryPrimitives.WriteUInt32BigEndian(head[5..], 0);
+        head[9] = Proto.OpScreen;
+        head[10] = source;
+        head[11] = 0;
+        BinaryPrimitives.WriteUInt16BigEndian(head[12..], (ushort)Math.Clamp(width, 0, 65535));
+        BinaryPrimitives.WriteUInt16BigEndian(head[14..], (ushort)Math.Clamp(height, 0, 65535));
+        BinaryPrimitives.WriteInt32BigEndian(head[16..], sequence);
+        BinaryPrimitives.WriteInt32BigEndian(head[20..], jpeg.Length);
+
+        _sendLock.Wait();
+        try
+        {
+            _stream.Write(head);
+            _stream.Write(jpeg);
+            FramesOut++;
+        }
+        catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+        {
+            LastScreenError = "sending a screen frame: " + ex.Message;
+            Fail("link closed while sending a screen frame");
+        }
+        finally
+        {
+            _sendLock.Release();
+        }
+    }
+
+    public void SendScreenConfig(byte mode, int width, int height, int fps, int quality, byte orientation, byte aspect)
+    {
+        Span<byte> body = stackalloc byte[9];
+        body[0] = mode;
+        BinaryPrimitives.WriteUInt16BigEndian(body[1..], (ushort)Math.Clamp(width, 0, 65535));
+        BinaryPrimitives.WriteUInt16BigEndian(body[3..], (ushort)Math.Clamp(height, 0, 65535));
+        body[5] = (byte)Math.Clamp(fps, 1, 60);
+        body[6] = (byte)Math.Clamp(quality, 10, 95);
+        body[7] = orientation;
+        body[8] = aspect;
+        SendFrame(Proto.OpScreenConfig, body);
+    }
+
+    public void SendPhoneInput(byte action, int x1, int y1, int x2, int y2, int durationMs, int key)
+    {
+        Span<byte> body = stackalloc byte[18];
+        body[0] = action;
+        body[1] = 0;
+        BinaryPrimitives.WriteUInt16BigEndian(body[2..], (ushort)Math.Clamp(x1, 0, 65535));
+        BinaryPrimitives.WriteUInt16BigEndian(body[4..], (ushort)Math.Clamp(y1, 0, 65535));
+        BinaryPrimitives.WriteUInt16BigEndian(body[6..], (ushort)Math.Clamp(x2, 0, 65535));
+        BinaryPrimitives.WriteUInt16BigEndian(body[8..], (ushort)Math.Clamp(y2, 0, 65535));
+        BinaryPrimitives.WriteUInt16BigEndian(body[10..], (ushort)Math.Clamp(durationMs, 0, 65535));
+        BinaryPrimitives.WriteUInt16BigEndian(body[12..], (ushort)Math.Clamp(key, 0, 65535));
+        BinaryPrimitives.WriteInt32BigEndian(body[14..], 0);
+        SendFrame(Proto.OpPhoneInput, body);
+    }
+
+    public void SendKeymap(string json)
+    {
+        int count = Encoding.UTF8.GetByteCount(json);
+        if (count > ushort.MaxValue)
+        {
+            throw new ArgumentException("keymap is too large", nameof(json));
+        }
+        var writer = new BodyWriter();
+        writer.Str(json);
+        SendFrame(Proto.OpKeymap, writer.Span);
+    }
+
+    /// <summary>
+    /// Tells the phone to drop this socket and redial over the USB tunnel.
+    /// Body: u8 mode, u16 port.
+    /// </summary>
+    public void SendTransport(byte mode, int port)
+    {
+        Span<byte> body = stackalloc byte[3];
+        body[0] = mode;
+        BinaryPrimitives.WriteUInt16BigEndian(body[1..], (ushort)Math.Clamp(port, 1, 65535));
+        SendFrame(Proto.OpTransport, body);
+    }
+
+    private void SendFrame(byte op, ReadOnlySpan<byte> body)
+    {
+        if (!_alive)
+        {
+            return;
+        }
+        Span<byte> header = stackalloc byte[Proto.HeaderSize];
+        BinaryPrimitives.WriteInt32BigEndian(header, 6 + body.Length);
+        header[4] = Proto.KindRequest;
+        BinaryPrimitives.WriteUInt32BigEndian(header[5..], 0);
+        header[9] = op;
+
+        _sendLock.Wait();
+        try
+        {
+            _stream.Write(header);
+            if (!body.IsEmpty)
+            {
+                _stream.Write(body);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+        {
+            Fail("link closed while sending a control frame");
+        }
+        finally
+        {
+            _sendLock.Release();
         }
     }
 
@@ -602,6 +1037,10 @@ internal sealed class RemoteClient : IDisposable
     public void Dispose()
     {
         _alive = false;
+        _input?.Dispose();
+        _input = null;
+        _gamepad?.Dispose();
+        _gamepad = null;
         try
         {
             _socket.Dispose();

@@ -13,7 +13,10 @@
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
@@ -45,9 +48,81 @@
             android:windowSoftInputMode="stateAlwaysHidden"
             tools:replace="android:screenOrientation" />
 
+        <!-- My own capture activity: animated scan frame instead of the stock laser. -->
+        <activity
+            android:name=".ScannerActivity"
+            android:clearTaskOnLaunch="true"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:stateNotNeeded="true"
+            android:theme="@style/Theme.ConnectIPN"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+
+        <!-- Touchpad stays upright so the mapping to the PC cursor is stable. -->
+        <activity
+            android:name=".TouchpadActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Both typing and the gamepad read best in landscape, like a computer. -->
+        <activity
+            android:name=".KeyboardActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+
+        <activity
+            android:name=".GamepadActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <activity
+            android:name=".ScreenActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".DesktopViewActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false"
+            android:screenOrientation="sensor" />
+
         <service
             android:name=".LinkService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".ScreenCaptureService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
+
+        <activity
+            android:name=".KeymapActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <service
+            android:name=".KeymapService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="On-screen key mapping overlay" />
+        </service>
+
+        <service
+            android:name=".RemoteControlService"
+            android:exported="true"
+            android:label="@string/keymap_accessibility"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/remote_control" />
+        </service>
     </application>
 </manifest>

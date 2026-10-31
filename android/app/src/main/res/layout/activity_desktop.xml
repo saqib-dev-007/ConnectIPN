@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <ImageView
+        android:id="@+id/screenImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:contentDescription="@string/desktop_title"
+        android:scaleType="fitCenter" />
+
+    <TextView
+        android:id="@+id/statsText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_pill"
+        android:fontFamily="monospace"
+        android:paddingStart="10dp"
+        android:paddingTop="5dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="5dp"
+        android:textColor="@color/ui_text_muted"
+        android:textSize="10.5sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/hintText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_pill"
+        android:paddingStart="12dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="6dp"
+        android:text="@string/desktop_hint"
+        android:textColor="@color/ui_text_muted"
+        android:textSize="11sp" />
+
+    <!-- Keyboard and controller live here. Declared before the toolbar on purpose:
+         the bar must stay tappable while the pad is open, so it draws on top. -->
+    <FrameLayout
+        android:id="@+id/overlayLayer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/desktop_connecting"
+            android:textColor="@color/ui_text_muted"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/retryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_button_secondary"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:stateListAnimator="@null"
+            android:text="@string/desktop_retry"
+            android:textAllCaps="false"
+            android:textColor="@color/ui_text"
+            android:textSize="13sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+
+
+    <!-- Floating tool chrome over the video -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/bg_overlay_panel"
+        android:orientation="vertical"
+        android:paddingStart="8dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="1dp">
+
+        <LinearLayout
+            android:id="@+id/topBarRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/backButton"
+                android:layout_width="42dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_button_secondary"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:stateListAnimator="@null"
+                android:text="&#8249;"
+                android:textColor="@color/ui_text"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/desktop_title"
+                android:textColor="@color/ui_text"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/qualityButton"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_button_secondary"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:stateListAnimator="@null"
+                android:text="@string/desktop_quality_balanced"
+                android:textAllCaps="false"
+                android:textColor="@color/ui_text"
+                android:textSize="11sp" />
+
+            <Button
+                android:id="@+id/aspectButton"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_button_secondary"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:stateListAnimator="@null"
+                android:text="@string/desktop_aspect_fit"
+                android:textAllCaps="false"
+                android:textColor="@color/ui_text"
+                android:textSize="11sp" />
+
+            <Button
+                android:id="@+id/keysButton"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_button_secondary"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:stateListAnimator="@null"
+                android:text="@string/desktop_keys"
+                android:textAllCaps="false"
+                android:textColor="@color/ui_text"
+                android:textSize="11sp" />
+
+            <Button
+                android:id="@+id/padButton"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_button_secondary"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:stateListAnimator="@null"
+                android:text="@string/desktop_pad"
+                android:textAllCaps="false"
+                android:textColor="@color/ui_text"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Grab handle, centred: tap to slide the whole bar away -->
+        <TextView
+            android:id="@+id/collapseButton"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:gravity="center"
+            android:text="&#9650;"
+            android:textColor="@color/ui_text_muted"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- Shown only while the bar is away: dim, small, out of the way -->
+    <TextView
+        android:id="@+id/expandButton"
+        android:layout_width="76dp"
+        android:layout_height="26dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="8dp"
+        android:alpha="0"
+        android:background="@drawable/bg_pill"
+        android:gravity="center"
+        android:text="&#9660;"
+        android:textColor="@color/ui_text_muted"
+        android:textSize="11sp"
+        android:visibility="gone" />
+
+
+</FrameLayout>

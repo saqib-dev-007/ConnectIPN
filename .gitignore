@@ -11,3 +11,7 @@ android/local.properties
 android/keystore.properties
 android/keystore/
 release/
+
+# Local agent tooling
+.opencode/
+.workbuddy-ai/

@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ui_bg"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingEnd="14dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <!-- Left hand: triggers, d-pad, movement stick -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/ltButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_touch_button"
+                android:gravity="center"
+                android:text="@string/pad_lt"
+                android:textColor="@color/ui_text_muted"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/lbButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_touch_button"
+                android:gravity="center"
+                android:text="@string/pad_lb"
+                android:textColor="@color/ui_text_muted"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="118dp"
+            android:layout_height="118dp"
+            android:layout_marginTop="10dp">
+
+            <TextView
+                android:id="@+id/dpadUp"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_gravity="top|center_horizontal"
+                android:background="@drawable/bg_face_button"
+                android:gravity="center"
+                android:text="@string/pad_up"
+                android:textColor="@color/ui_text"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/dpadDown"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:background="@drawable/bg_face_button"
+                android:gravity="center"
+                android:text="@string/pad_down"
+                android:textColor="@color/ui_text"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/dpadLeft"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_gravity="center_vertical|start"
+                android:background="@drawable/bg_face_button"
+                android:gravity="center"
+                android:text="@string/pad_left"
+                android:textColor="@color/ui_text"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/dpadRight"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_gravity="center_vertical|end"
+                android:background="@drawable/bg_face_button"
+                android:gravity="center"
+                android:text="@string/pad_right"
+                android:textColor="@color/ui_text"
+                android:textSize="13sp" />
+        </FrameLayout>
+
+        <com.connectipn.JoystickView
+            android:id="@+id/leftStick"
+            android:layout_width="138dp"
+            android:layout_height="138dp"
+            android:layout_marginTop="10dp" />
+    </LinearLayout>
+
+    <!-- Centre: gyro above Back, mouse toggle above Start, pinned to the bottom -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.75"
+        android:gravity="bottom"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="6dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/gyroButton"
+                android:layout_width="match_parent"
+                android:layout_height="34dp"
+                android:background="@drawable/bg_touch_button"
+                android:gravity="center"
+                android:text="@string/gamepad_gyro_off"
+                android:textAllCaps="false"
+                android:textColor="@color/ui_text"
+                android:textSize="11.5sp" />
+
+            <TextView
+                android:id="@+id/backButton"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_face_button"
+                android:gravity="center"
+                android:text="@string/pad_back"
+                android:textColor="@color/ui_text_muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/mouseButton"
+                android:layout_width="match_parent"
+                android:layout_height="34dp"
+                android:background="@drawable/bg_touch_button"
+                android:gravity="center"
+                android:text="@string/desktop_mouse_on"
+                android:textAllCaps="false"
+                android:textColor="@color/ui_text"
+                android:textSize="11.5sp" />
+
+            <TextView
+                android:id="@+id/startButton"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_face_button"
+                android:gravity="center"
+                android:text="@string/pad_start"
+                android:textColor="@color/ui_text_muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Right hand: bumpers, face buttons, camera stick -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/rbButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_touch_button"
+                android:gravity="center"
+                android:text="@string/pad_rb"
+                android:textColor="@color/ui_text_muted"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/rtButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_touch_button"
+                android:gravity="center"
+                android:text="@string/pad_rt"
+                android:textColor="@color/ui_text_muted"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="138dp"
+            android:layout_height="138dp"
+            android:layout_marginTop="10dp">
+
+            <TextView
+                android:id="@+id/buttonY"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="top|center_horizontal"
+                android:background="@drawable/bg_face_button"
+                android:gravity="center"
+                android:text="@string/pad_y"
+                android:textColor="@color/ui_amber"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/buttonX"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="center_vertical|start"
+                android:background="@drawable/bg_face_button"
+                android:gravity="center"
+                android:text="@string/pad_x"
+                android:textColor="@color/ui_accent"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/buttonB"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="center_vertical|end"
+                android:background="@drawable/bg_face_button"
+                android:gravity="center"
+                android:text="@string/pad_b"
+                android:textColor="@color/ui_red"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/buttonA"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:background="@drawable/bg_face_button"
+                android:gravity="center"
+                android:text="@string/pad_a"
+                android:textColor="@color/ui_green"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <com.connectipn.JoystickView
+            android:id="@+id/rightStick"
+            android:layout_width="138dp"
+            android:layout_height="138dp"
+            android:layout_marginTop="10dp" />
+    </LinearLayout>
+</LinearLayout>

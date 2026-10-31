@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,6 +12,7 @@ import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,14 +33,22 @@ public class MainActivity extends AppCompatActivity implements LinkManager.Liste
     private static final String LINK_GITHUB = "https://github.com/saqib-dev-007";
     private static final String LINK_LINKEDIN = "https://www.linkedin.com/in/saqib-mengal-76855b389/";
     private static final String LINK_EMAIL = "mailto:saqibmengal7@gmail.com";
+    private static final String LINK_PATREON = "https://www.patreon.com/cw/SaqibMengal";
 
     private TextView statusText;
     private TextView detailText;
     private TextView rootText;
-    private View statusDot;
+    private RadarView radar;
     private Button scanButton;
     private Button permissionButton;
     private Button disconnectButton;
+    private Switch usbSwitch;
+    private boolean updatingUi;
+    private View mouseTile;
+    private View keyboardTile;
+    private View gamepadTile;
+    private View screenTile;
+    private TextView appsHint;
 
     private final ActivityResultLauncher<ScanOptions> scanner =
             registerForActivityResult(new ScanContract(), result -> {
@@ -52,31 +60,66 @@ public class MainActivity extends AppCompatActivity implements LinkManager.Liste
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CrashLogger.install(getApplicationContext());
         setContentView(R.layout.activity_main);
+        KeymapStore.init(this);
+        LinkManager.get().init(this);
 
         statusText = findViewById(R.id.statusText);
         detailText = findViewById(R.id.detailText);
         rootText = findViewById(R.id.rootText);
-        statusDot = findViewById(R.id.statusDot);
+        radar = findViewById(R.id.statusDot);
         scanButton = findViewById(R.id.scanButton);
         permissionButton = findViewById(R.id.permissionButton);
         disconnectButton = findViewById(R.id.disconnectButton);
+        usbSwitch = findViewById(R.id.usbSwitch);
+        mouseTile = findViewById(R.id.mouseTile);
+        keyboardTile = findViewById(R.id.keyboardTile);
+        gamepadTile = findViewById(R.id.gamepadTile);
+        screenTile = findViewById(R.id.screenTile);
+        appsHint = findViewById(R.id.appsHint);
 
         scanButton.setOnClickListener(v -> startScan());
+        usbSwitch.setOnCheckedChangeListener((button, checked) -> {
+            if (!updatingUi) {
+                LinkManager.get().setUsbMode(checked);
+            }
+        });
+        mouseTile.setOnClickListener(v -> openMouse());
+        keyboardTile.setOnClickListener(v -> openKeyboard());
+        gamepadTile.setOnClickListener(v -> openGamepad());
+        screenTile.setOnClickListener(v -> openScreen());
         permissionButton.setOnClickListener(v -> requestAllFilesAccess());
         disconnectButton.setOnClickListener(v -> {
             LinkManager.get().disconnect();
             stopService(new Intent(this, LinkService.class));
+            refreshUi();
+        });
+        // Long-press forgets the PC, so the next launch waits for a QR scan again.
+        disconnectButton.setOnLongClickListener(v -> {
+            LinkManager.get().forget();
+            stopService(new Intent(this, LinkService.class));
+            toast(getString(R.string.pairing_forgotten));
+            refreshUi();
+            return true;
         });
 
         ImageButton instagram = findViewById(R.id.instagramButton);
         ImageButton github = findViewById(R.id.githubButton);
         ImageButton linkedin = findViewById(R.id.linkedinButton);
         ImageButton email = findViewById(R.id.emailButton);
+        ImageButton patreon = findViewById(R.id.patreonButton);
         instagram.setOnClickListener(v -> openLink(LINK_INSTAGRAM));
         github.setOnClickListener(v -> openLink(LINK_GITHUB));
         linkedin.setOnClickListener(v -> openLink(LINK_LINKEDIN));
         email.setOnClickListener(v -> openLink(LINK_EMAIL));
+        patreon.setOnClickListener(v -> openLink(LINK_PATREON));
+
+        // Tactile press feedback for the deck and the primary actions.
+        for (View tile : new View[] { mouseTile, keyboardTile, gamepadTile, screenTile,
+                scanButton, permissionButton, disconnectButton }) {
+            Ui.pressSink(tile);
+        }
 
         requestRuntimePermissions();
         refreshUi();
@@ -85,7 +128,13 @@ public class MainActivity extends AppCompatActivity implements LinkManager.Liste
     @Override
     protected void onResume() {
         super.onResume();
+        LinkManager.get().init(this);
         LinkManager.get().setListener(this);
+        LinkManager.get().sendStatus();
+        // A paired PC is reconnected silently; the QR code is only for the first time.
+        if (LinkManager.get().state() == LinkManager.State.IDLE) {
+            LinkManager.get().autoConnect();
+        }
         refreshUi();
     }
 
@@ -103,6 +152,8 @@ public class MainActivity extends AppCompatActivity implements LinkManager.Liste
         options.setBarcodeImageEnabled(false);
         // Keep the scanner upright: the library otherwise follows the sensor.
         options.setOrientationLocked(true);
+        // My own capture activity: animated scan frame instead of the stock laser.
+        options.setCaptureActivity(ScannerActivity.class);
         scanner.launch(options);
     }
 
@@ -201,22 +252,23 @@ public class MainActivity extends AppCompatActivity implements LinkManager.Liste
             case CONNECTED:
                 statusText.setText(R.string.status_connected);
                 detailText.setText(R.string.detail_connected);
-                setStatusColor(R.color.ui_green);
+                radarStart(2);
                 break;
             case CONNECTING:
                 statusText.setText(R.string.status_connecting);
                 detailText.setText(manager.message());
-                setStatusColor(R.color.ui_amber);
+                radarStart(1);
                 break;
             case ERROR:
                 statusText.setText(R.string.status_error);
-                detailText.setText(manager.message() + "\nScan the code again to retry.");
-                setStatusColor(R.color.ui_red);
+                detailText.setText(manager.message() + "\n"
+                        + (manager.isPaired() ? "Reconnecting automatically…" : "Scan the code to connect."));
+                radarStart(3);
                 break;
             default:
                 statusText.setText(R.string.status_idle);
                 detailText.setText(R.string.detail_idle);
-                setStatusColor(R.color.ui_text_dim);
+                radarStart(0);
                 break;
         }
 
@@ -224,6 +276,13 @@ public class MainActivity extends AppCompatActivity implements LinkManager.Liste
         boolean busy = state == LinkManager.State.CONNECTING;
         scanButton.setEnabled(!connected && !busy);
         disconnectButton.setEnabled(connected || busy);
+
+        updatingUi = true;
+        usbSwitch.setChecked(LinkManager.get().isUsbPreferred());
+        updatingUi = false;
+        usbSwitch.setAlpha(connected || busy ? 1f : 0.45f);
+        usbSwitch.setEnabled(connected || busy);
+
         permissionButton.setVisibility(hasAllFilesAccess() ? View.GONE : View.VISIBLE);
 
         // Custom button backgrounds do not dim themselves when disabled.
@@ -237,12 +296,50 @@ public class MainActivity extends AppCompatActivity implements LinkManager.Liste
         } else {
             rootText.setText("");
         }
+
+        // The apps only work while a phone is paired to a PC.
+        for (View tile : new View[] { mouseTile, keyboardTile, gamepadTile, screenTile }) {
+            tile.setEnabled(connected);
+            tile.setAlpha(connected ? 1f : 0.4f);
+        }
+        appsHint.setVisibility(connected ? View.GONE : View.VISIBLE);
     }
 
-    private void setStatusColor(int colorRes) {
-        Drawable background = statusDot.getBackground();
-        if (background != null) {
-            background.mutate().setTint(ContextCompat.getColor(this, colorRes));
+    private void openMouse() {
+        if (LinkManager.get().state() != LinkManager.State.CONNECTED) {
+            toast(getString(R.string.apps_needs_link));
+            return;
+        }
+        startActivity(new Intent(this, TouchpadActivity.class));
+    }
+
+    private void openKeyboard() {
+        if (LinkManager.get().state() != LinkManager.State.CONNECTED) {
+            toast(getString(R.string.apps_needs_link));
+            return;
+        }
+        startActivity(new Intent(this, KeyboardActivity.class));
+    }
+
+    private void openScreen() {
+        if (LinkManager.get().state() != LinkManager.State.CONNECTED) {
+            toast(getString(R.string.apps_needs_link));
+            return;
+        }
+        startActivity(new Intent(this, ScreenActivity.class));
+    }
+
+    private void openGamepad() {
+        if (LinkManager.get().state() != LinkManager.State.CONNECTED) {
+            toast(getString(R.string.apps_needs_link));
+            return;
+        }
+        startActivity(new Intent(this, GamepadActivity.class));
+    }
+
+    private void radarStart(int mode) {
+        if (radar != null) {
+            radar.start(mode);
         }
     }
 
